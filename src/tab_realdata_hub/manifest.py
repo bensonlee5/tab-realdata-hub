@@ -207,7 +207,10 @@ def _build_manifest_warnings(
         if included_unaccepted > 0:
             warnings.append(
                 "Included datasets without accepted filter status "
-                f"(count={included_unaccepted})."
+                f"(count={included_unaccepted}). Run `dagzoo filter --in <generated_dir> "
+                "--out <filter_dir> --curated-out <curated_dir>` and rebuild the "
+                "manifest from curated accepted-only shards at `<curated_dir>` with "
+                "--filter-policy accepted_only."
             )
     elif excluded_records > 0:
         warnings.append(

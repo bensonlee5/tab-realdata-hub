@@ -1227,6 +1227,7 @@ def materialize_bundle(
     force: bool = False,
     split_seed: int = DEFAULT_COMPARATOR_SPLIT_SEED,
     test_size: float = DEFAULT_COMPARATOR_TEST_SIZE,
+    bundle_source_path_label: str | None = None,
     prepare_task_fn: _PreparedTaskProvider | None = None,
 ) -> OpenMLMaterializationResult:
     """Materialize one OpenML bundle into packed shards and a manifest."""
@@ -1245,6 +1246,11 @@ def materialize_bundle(
     allow_missing_values = bundle_allows_missing_values(bundle)
     task_summaries: list[dict[str, Any]] = []
     provider = prepare_task if prepare_task_fn is None else prepare_task_fn
+    persisted_bundle_source_path = (
+        str(resolved_bundle_path)
+        if bundle_source_path_label is None
+        else str(bundle_source_path_label)
+    )
 
     data_root.mkdir(parents=True, exist_ok=True)
     for task_order, task_id in enumerate(cast(list[int], bundle["task_ids"]), start=1):
@@ -1279,7 +1285,7 @@ def materialize_bundle(
             "source_platform": "openml",
             "benchmark_bundle": {
                 "name": str(bundle["name"]),
-                "source_path": str(resolved_bundle_path),
+                "source_path": persisted_bundle_source_path,
                 "task_id": int(task_id),
                 "allow_missing_values": bool(allow_missing_values),
             },
@@ -1321,7 +1327,10 @@ def materialize_bundle(
 
     build_manifest([data_root], manifest_path)
     return OpenMLMaterializationResult(
-        bundle_summary=bundle_summary(bundle, source_path=resolved_bundle_path),
+        bundle_summary={
+            **bundle_summary(bundle, source_path=resolved_bundle_path),
+            "source_path": persisted_bundle_source_path,
+        },
         task_summaries=tuple(task_summaries),
         allow_missing_values=bool(allow_missing_values),
         data_root=data_root,
