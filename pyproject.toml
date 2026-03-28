@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tab-realdata-hub"
+version = "0.1.0"
+description = "Manifest-backed real-data ingestion and OpenML materialization for tabular workflows"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.14,<3.15"
+keywords = [
+  "tabular",
+  "openml",
+  "dataset-ingestion",
+  "manifest",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "numpy>=2.1",
+  "openml>=0.15",
+  "pandas>=2.2",
+  "pyarrow>=23.0",
+  "scikit-learn>=1.6",
+]
+
+[project.urls]
+Repository = "https://github.com/bensonlee5/tab-realdata-hub"
+
+[project.scripts]
+tab-realdata-hub = "tab_realdata_hub.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tab_realdata_hub"]
+
+[tool.uv]
+package = true
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
