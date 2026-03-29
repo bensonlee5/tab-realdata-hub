@@ -1168,6 +1168,42 @@ def _build_split_table(rows: list[tuple[int, np.ndarray, np.ndarray]]) -> pa.Tab
     )
 
 
+def _build_split_table_with_row_indices(
+    *,
+    dataset_index: int,
+    x: np.ndarray,
+    y: np.ndarray,
+    row_indices: np.ndarray | None = None,
+) -> pa.Table:
+    resolved_row_indices = (
+        np.arange(int(x.shape[0]), dtype=np.int64)
+        if row_indices is None
+        else np.asarray(row_indices, dtype=np.int64)
+    )
+    if resolved_row_indices.shape != (int(x.shape[0]),):
+        raise RuntimeError(
+            "row_indices must align with x/y rows when writing packed split tables: "
+            f"expected={(int(x.shape[0]),)}, got={resolved_row_indices.shape}"
+        )
+    dataset_indices: list[int] = []
+    row_index_values: list[int] = []
+    x_rows: list[list[float]] = []
+    y_rows: list[int] = []
+    for row_offset in range(int(x.shape[0])):
+        dataset_indices.append(int(dataset_index))
+        row_index_values.append(int(resolved_row_indices[row_offset]))
+        x_rows.append(np.asarray(x[row_offset], dtype=np.float32).tolist())
+        y_rows.append(int(y[row_offset]))
+    return pa.table(
+        {
+            "dataset_index": pa.array(dataset_indices, type=pa.int64()),
+            "row_index": pa.array(row_index_values, type=pa.int64()),
+            "x": pa.array(x_rows, type=pa.list_(pa.float32())),
+            "y": pa.array(y_rows, type=pa.int64()),
+        }
+    )
+
+
 def _write_packed_shard(
     shard_dir: Path,
     *,
@@ -1175,11 +1211,29 @@ def _write_packed_shard(
     y_train: np.ndarray,
     x_test: np.ndarray,
     y_test: np.ndarray,
+    train_row_indices: np.ndarray | None = None,
+    test_row_indices: np.ndarray | None = None,
     metadata: dict[str, Any],
 ) -> None:
     shard_dir.mkdir(parents=True, exist_ok=True)
-    pq.write_table(_build_split_table([(0, x_train, y_train)]), shard_dir / "train.parquet")
-    pq.write_table(_build_split_table([(0, x_test, y_test)]), shard_dir / "test.parquet")
+    pq.write_table(
+        _build_split_table_with_row_indices(
+            dataset_index=0,
+            x=x_train,
+            y=y_train,
+            row_indices=train_row_indices,
+        ),
+        shard_dir / "train.parquet",
+    )
+    pq.write_table(
+        _build_split_table_with_row_indices(
+            dataset_index=0,
+            x=x_test,
+            y=y_test,
+            row_indices=test_row_indices,
+        ),
+        shard_dir / "test.parquet",
+    )
     payload = {
         "dataset_index": 0,
         "n_train": int(x_train.shape[0]),
@@ -1198,26 +1252,43 @@ def _split_prepared_task(
     split_seed: int,
     test_size: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
+    x_train, x_test, y_train, y_test, _train_idx, _test_idx, split_mode = _split_prepared_task_indices(
+        prepared,
+        split_seed=split_seed,
+        test_size=test_size,
+    )
+    return x_train, x_test, y_train, y_test, split_mode
+
+
+def _split_prepared_task_indices(
+    prepared: PreparedOpenMLTask,
+    *,
+    split_seed: int,
+    test_size: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
     split_kwargs: dict[str, Any] = {
         "test_size": float(test_size),
         "random_state": int(split_seed),
     }
+    indices = np.arange(int(prepared.x.shape[0]), dtype=np.int64)
     try:
-        x_train, x_test, y_train, y_test = train_test_split(
+        x_train, x_test, y_train, y_test, train_idx, test_idx = train_test_split(
             prepared.x,
             prepared.y,
+            indices,
             stratify=prepared.y,
             **split_kwargs,
         )
-        return x_train, x_test, y_train, y_test, "stratified"
+        return x_train, x_test, y_train, y_test, train_idx, test_idx, "stratified"
     except ValueError:
-        x_train, x_test, y_train, y_test = train_test_split(
+        x_train, x_test, y_train, y_test, train_idx, test_idx = train_test_split(
             prepared.x,
             prepared.y,
+            indices,
             stratify=None,
             **split_kwargs,
         )
-        return x_train, x_test, y_train, y_test, "unstratified_fallback"
+        return x_train, x_test, y_train, y_test, train_idx, test_idx, "unstratified_fallback"
 
 
 def materialize_bundle(
@@ -1259,7 +1330,7 @@ def materialize_bundle(
             new_instances=int(selection["new_instances"]),
             task_type=str(selection["task_type"]),
         )
-        x_train, x_test, y_train, y_test, split_mode = _split_prepared_task(
+        x_train, x_test, y_train, y_test, train_idx, test_idx, split_mode = _split_prepared_task_indices(
             prepared,
             split_seed=split_seed,
             test_size=test_size,
@@ -1285,7 +1356,9 @@ def materialize_bundle(
             "source_platform": "openml",
             "benchmark_bundle": {
                 "name": str(bundle["name"]),
+                "version": int(bundle["version"]),
                 "source_path": persisted_bundle_source_path,
+                "selection": json.loads(json.dumps(selection, sort_keys=True)),
                 "task_id": int(task_id),
                 "allow_missing_values": bool(allow_missing_values),
             },
@@ -1309,6 +1382,8 @@ def materialize_bundle(
             y_train=y_train,
             x_test=x_test,
             y_test=y_test,
+            train_row_indices=train_idx,
+            test_row_indices=test_idx,
             metadata=metadata,
         )
         task_summary = {

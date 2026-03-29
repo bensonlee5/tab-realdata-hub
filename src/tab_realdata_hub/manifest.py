@@ -1,4 +1,4 @@
-"""Manifest builder and inspection helpers for packed parquet shard outputs."""
+"""Manifest builder, inspection, and read helpers for packed parquet shard outputs."""
 
 from __future__ import annotations
 
@@ -24,11 +24,41 @@ from .validation import (
     MISSING_VALUE_STATUS_CLEAN,
     MISSING_VALUE_STATUS_CONTAINS_NAN_OR_INF,
     SUPPORTED_MISSING_VALUE_POLICIES,
+    assert_no_non_finite_values,
     missing_value_status,
 )
 
 
+MANIFEST_CONTRACT_METADATA_KEY = b"tab_realdata_hub_manifest_contract"
 MANIFEST_SUMMARY_METADATA_KEY = b"tab_foundry_manifest_summary"
+MANIFEST_CONTRACT_VERSION = 1
+MANIFEST_LOGICAL_LAYOUT = "parquet_index+metadata_ndjson"
+MANIFEST_STABLE_INDEX_FIELDS = (
+    "dataset_id",
+    "dataset_identity_key",
+    "source_root_id",
+    "source_shard_relpath",
+    "split",
+    "task",
+    "shard_id",
+    "dataset_index",
+    "train_path",
+    "test_path",
+    "metadata_path",
+    "metadata_offset_bytes",
+    "metadata_size_bytes",
+    "metadata_sha256",
+    "n_train",
+    "n_test",
+    "n_features",
+    "n_classes",
+    "seed",
+    "filter_mode",
+    "filter_status",
+    "filter_accepted",
+    "missing_value_policy",
+    "missing_value_status",
+)
 HEX_DIGEST_RADIX = 16
 SPLIT_BUCKET_COUNT = 10_000
 SHORT_DIGEST_HEX_CHARS = 12
@@ -54,6 +84,18 @@ class ManifestSummary:
     missing_value_status_counts: dict[str, int] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
     dagzoo_handoff: dict[str, Any] | None = None
+
+
+@dataclass(slots=True, frozen=True)
+class LoadedManifestDatasets:
+    """Canonical manifest-backed dataset payload for benchmark/helper execution."""
+
+    manifest_path: Path
+    contract_version: int
+    manifest_sha256: str
+    datasets: dict[str, tuple[np.ndarray, np.ndarray]]
+    task_records: tuple[dict[str, Any], ...]
+    persisted_summary: dict[str, Any] | None = None
 
 
 def _stable_split(key: str, train_ratio: float, val_ratio: float) -> str:
@@ -315,7 +357,14 @@ def _missing_value_status_by_dataset(split_path: Path) -> dict[int, str]:
 
 
 def _manifest_schema_metadata(*, summary: ManifestSummary) -> dict[bytes, bytes]:
+    contract_payload = {
+        "version": int(MANIFEST_CONTRACT_VERSION),
+        "logical_layout": MANIFEST_LOGICAL_LAYOUT,
+        "owner": "tab-realdata-hub",
+        "stable_index_fields": list(MANIFEST_STABLE_INDEX_FIELDS),
+    }
     payload = {
+        "contract_version": int(MANIFEST_CONTRACT_VERSION),
         "filter_policy": summary.filter_policy,
         "missing_value_policy": summary.missing_value_policy,
         "discovered_records": int(summary.discovered_records),
@@ -330,7 +379,10 @@ def _manifest_schema_metadata(*, summary: ManifestSummary) -> dict[bytes, bytes]
     }
     if summary.dagzoo_handoff is not None:
         payload["dagzoo_handoff"] = dict(summary.dagzoo_handoff)
-    return {MANIFEST_SUMMARY_METADATA_KEY: json.dumps(payload, sort_keys=True).encode("utf-8")}
+    return {
+        MANIFEST_CONTRACT_METADATA_KEY: json.dumps(contract_payload, sort_keys=True).encode("utf-8"),
+        MANIFEST_SUMMARY_METADATA_KEY: json.dumps(payload, sort_keys=True).encode("utf-8"),
+    }
 
 
 def build_manifest(
@@ -577,6 +629,265 @@ def _read_persisted_manifest_summary(manifest_path: Path) -> dict[str, Any] | No
     return cast(dict[str, Any], payload)
 
 
+def manifest_sha256(manifest_path: Path) -> str:
+    """Return the SHA-256 digest of one manifest parquet file."""
+
+    resolved_manifest = manifest_path.expanduser().resolve()
+    digest = sha256()
+    with resolved_manifest.open("rb") as handle:
+        while True:
+            chunk = handle.read(1024 * 1024)
+            if not chunk:
+                break
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _read_manifest_contract_payload(manifest_path: Path) -> dict[str, Any] | None:
+    metadata = pq.ParquetFile(manifest_path).schema_arrow.metadata or {}
+    raw_contract = metadata.get(MANIFEST_CONTRACT_METADATA_KEY)
+    if raw_contract is None:
+        return None
+    payload = json.loads(raw_contract.decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"persisted manifest contract must be an object: {manifest_path}")
+    return cast(dict[str, Any], payload)
+
+
+def _require_manifest_contract(manifest_path: Path) -> dict[str, Any]:
+    payload = _read_manifest_contract_payload(manifest_path)
+    if payload is None:
+        raise RuntimeError(
+            "manifest contract metadata is missing; regenerate the manifest with tab-realdata-hub "
+            f"before loading it: {manifest_path}"
+        )
+    raw_version = payload.get("version")
+    if not isinstance(raw_version, int):
+        raise RuntimeError(f"manifest contract version must be an int: {manifest_path}")
+    if int(raw_version) != int(MANIFEST_CONTRACT_VERSION):
+        raise RuntimeError(
+            "manifest contract version mismatch: "
+            f"expected={MANIFEST_CONTRACT_VERSION}, actual={raw_version}, path={manifest_path}"
+        )
+    return payload
+
+
+def _resolve_record_path(manifest_path: Path, raw_path: str) -> Path:
+    path = Path(raw_path)
+    if path.is_absolute():
+        return path
+    return (manifest_path.parent / path).resolve()
+
+
+def _packed_x_to_matrix(x_column: Any) -> np.ndarray:
+    rows = x_column.to_numpy(zero_copy_only=False)
+    if rows.size == 0:
+        raise RuntimeError("packed split has zero rows")
+    try:
+        x = np.vstack(rows).astype(np.float32, copy=False)
+    except ValueError as exc:
+        raise RuntimeError("packed x column has ragged row lengths") from exc
+    if x.ndim != 2:
+        raise RuntimeError(f"packed x column did not decode to rank-2 matrix, got shape={x.shape}")
+    return x
+
+
+def _read_packed_split(
+    split_path: Path,
+    *,
+    dataset_index: int,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    try:
+        table = pq.read_table(
+            split_path,
+            filters=[("dataset_index", "=", int(dataset_index))],
+            columns=["row_index", "x", "y"],
+        )
+    except Exception as exc:  # pragma: no cover - pyarrow error typing is backend-specific
+        raise RuntimeError(
+            f"failed to read packed split parquet path={split_path}, dataset_index={dataset_index}"
+        ) from exc
+    if table.num_rows <= 0:
+        raise RuntimeError(
+            f"packed split has zero rows for dataset_index={dataset_index}: path={split_path}"
+        )
+    row_index = table["row_index"].to_numpy(zero_copy_only=False).astype(np.int64, copy=False)
+    x = _packed_x_to_matrix(table["x"])
+    y = table["y"].to_numpy(zero_copy_only=False)
+    if row_index.shape[0] != x.shape[0] or row_index.shape[0] != y.shape[0]:
+        raise RuntimeError(
+            "packed split row count mismatch: "
+            f"path={split_path}, dataset_index={dataset_index}, "
+            f"row_index={row_index.shape[0]}, x={x.shape[0]}, y={y.shape[0]}"
+        )
+    order = np.argsort(row_index, kind="stable")
+    if not np.array_equal(order, np.arange(order.shape[0])):
+        row_index = row_index[order]
+        x = x[order]
+        y = y[order]
+    unique = np.unique(row_index)
+    if unique.shape[0] != row_index.shape[0]:
+        raise RuntimeError(
+            f"packed split row_index values must be unique: path={split_path}, dataset_index={dataset_index}"
+        )
+    return row_index, x, y
+
+
+def _read_ndjson_record_by_offset(
+    metadata_path: Path,
+    *,
+    offset_bytes: int,
+    size_bytes: int,
+    expected_sha256: str,
+) -> dict[str, Any]:
+    with metadata_path.open("rb") as handle:
+        handle.seek(offset_bytes)
+        raw = handle.read(size_bytes)
+    if len(raw) != size_bytes:
+        raise RuntimeError(
+            "failed to read full metadata slice from NDJSON: "
+            f"path={metadata_path}, offset={offset_bytes}, size={size_bytes}, got={len(raw)}"
+        )
+    actual_sha256 = sha256(raw).hexdigest()
+    if actual_sha256 != expected_sha256:
+        raise RuntimeError(
+            "metadata NDJSON checksum mismatch: "
+            f"path={metadata_path}, offset={offset_bytes}, size={size_bytes}, "
+            f"expected={expected_sha256}, actual={actual_sha256}"
+        )
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+    except Exception as exc:  # pragma: no cover - defensive parse context
+        raise RuntimeError(
+            "failed to parse metadata NDJSON record: "
+            f"path={metadata_path}, offset={offset_bytes}, size={size_bytes}"
+        ) from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError(
+            f"metadata NDJSON payload must be an object: path={metadata_path}, offset={offset_bytes}"
+        )
+    return payload
+
+
+def _dataset_display_name(*, dataset_id: str, metadata: dict[str, Any]) -> str:
+    openml_payload = metadata.get("openml")
+    if isinstance(openml_payload, dict):
+        dataset_name = openml_payload.get("dataset_name")
+        if isinstance(dataset_name, str) and dataset_name.strip():
+            return str(dataset_name)
+    observed_task = metadata.get("observed_task")
+    if isinstance(observed_task, dict):
+        dataset_name = observed_task.get("dataset_name")
+        if isinstance(dataset_name, str) and dataset_name.strip():
+            return str(dataset_name)
+    return str(dataset_id)
+
+
+def _combine_dataset_splits(
+    *,
+    train_row_index: np.ndarray,
+    x_train: np.ndarray,
+    y_train: np.ndarray,
+    test_row_index: np.ndarray,
+    x_test: np.ndarray,
+    y_test: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, str]:
+    combined_row_index = np.concatenate([train_row_index, test_row_index], axis=0)
+    combined_x = np.concatenate([x_train, x_test], axis=0)
+    combined_y = np.concatenate([y_train, y_test], axis=0)
+    if np.unique(combined_row_index).shape[0] == combined_row_index.shape[0]:
+        order = np.argsort(combined_row_index, kind="stable")
+        return combined_x[order], combined_y[order], "global_row_index"
+    return combined_x, combined_y, "split_concat"
+
+
+def load_manifest_datasets(
+    manifest_path: Path,
+    *,
+    allow_missing_values: bool = False,
+    expected_task: str | None = None,
+) -> LoadedManifestDatasets:
+    """Load manifest-backed datasets for benchmark/helper execution."""
+
+    resolved_manifest = manifest_path.expanduser().resolve()
+    if not resolved_manifest.exists():
+        raise RuntimeError(f"manifest does not exist: {resolved_manifest}")
+    contract = _require_manifest_contract(resolved_manifest)
+    table = pq.read_table(resolved_manifest)
+    rows = cast(list[dict[str, Any]], table.to_pylist())
+    if not rows:
+        raise RuntimeError(f"manifest has zero rows: {resolved_manifest}")
+
+    datasets: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    task_records: list[dict[str, Any]] = []
+    for row in rows:
+        task = str(row.get("task", "unknown"))
+        if expected_task is not None and task != str(expected_task):
+            raise RuntimeError(
+                f"manifest row task mismatch: expected={expected_task!r}, actual={task!r}, path={resolved_manifest}"
+            )
+        dataset_index = int(row["dataset_index"])
+        train_path = _resolve_record_path(resolved_manifest, str(row["train_path"]))
+        test_path = _resolve_record_path(resolved_manifest, str(row["test_path"]))
+        metadata_path = _resolve_record_path(resolved_manifest, str(row["metadata_path"]))
+        metadata_record = _read_ndjson_record_by_offset(
+            metadata_path,
+            offset_bytes=int(row["metadata_offset_bytes"]),
+            size_bytes=int(row["metadata_size_bytes"]),
+            expected_sha256=str(row["metadata_sha256"]),
+        )
+        raw_metadata = metadata_record.get("metadata")
+        if not isinstance(raw_metadata, dict):
+            raise RuntimeError(
+                f"metadata record missing object payload at key 'metadata': path={metadata_path}"
+            )
+        metadata = cast(dict[str, Any], raw_metadata)
+        train_row_index, x_train, y_train = _read_packed_split(train_path, dataset_index=dataset_index)
+        test_row_index, x_test, y_test = _read_packed_split(test_path, dataset_index=dataset_index)
+        x, y, row_order_mode = _combine_dataset_splits(
+            train_row_index=train_row_index,
+            x_train=x_train,
+            y_train=np.asarray(y_train),
+            test_row_index=test_row_index,
+            x_test=x_test,
+            y_test=np.asarray(y_test),
+        )
+        dataset_id = str(row["dataset_id"])
+        dataset_name = _dataset_display_name(dataset_id=dataset_id, metadata=metadata)
+        if dataset_name in datasets:
+            raise RuntimeError(
+                f"duplicate dataset name in manifest-backed load result: {dataset_name!r}, path={resolved_manifest}"
+            )
+        if not allow_missing_values:
+            assert_no_non_finite_values(
+                {"x": x, "y": y},
+                context=f"manifest dataset {dataset_name!r}",
+            )
+        datasets[dataset_name] = (np.asarray(x, dtype=np.float32), np.asarray(y))
+        task_record = {
+            "dataset_id": dataset_id,
+            "dataset_name": dataset_name,
+            "task": task,
+            "n_rows": int(x.shape[0]),
+            "n_train": int(row["n_train"]),
+            "n_test": int(row["n_test"]),
+            "n_features": int(row["n_features"]),
+            "n_classes": None if row.get("n_classes") is None else int(row["n_classes"]),
+            "row_order_mode": row_order_mode,
+            "metadata": metadata,
+            "manifest_record": dict(row),
+        }
+        task_records.append(task_record)
+    return LoadedManifestDatasets(
+        manifest_path=resolved_manifest,
+        contract_version=int(contract["version"]),
+        manifest_sha256=manifest_sha256(resolved_manifest),
+        datasets=datasets,
+        task_records=tuple(task_records),
+        persisted_summary=_read_persisted_manifest_summary(resolved_manifest),
+    )
+
+
 def _distribution(values: list[int]) -> dict[str, Any]:
     if not values:
         return {"count": 0, "min": None, "max": None, "mean": None}
@@ -651,6 +962,8 @@ def inspect_manifest(manifest_path: Path) -> dict[str, Any]:
     n_class_histogram = Counter(classification_n_classes)
     return {
         "manifest_path": str(resolved_manifest),
+        "manifest_sha256": manifest_sha256(resolved_manifest),
+        "manifest_contract": _read_manifest_contract_payload(resolved_manifest),
         "total_records": len(records),
         "split_counts": dict(sorted(split_counts.items())),
         "task_counts": dict(sorted(task_counts.items())),
@@ -754,6 +1067,9 @@ def manifest_characteristics(manifest_path: Path) -> dict[str, Any]:
     if raw_summary is not None:
         persisted_summary = json.loads(raw_summary.decode("utf-8"))
     return {
+        "manifest_path": str(resolved_manifest),
+        "manifest_sha256": manifest_sha256(resolved_manifest),
+        "manifest_contract": _read_manifest_contract_payload(resolved_manifest),
         "record_count": int(len(rows)),
         "split_counts": dict(sorted(split_counts.items())),
         "task_counts": dict(sorted(task_counts.items())),

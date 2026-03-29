@@ -126,8 +126,42 @@ def test_manifest_build_and_inspect_round_trip(tmp_path: Path) -> None:
 
     assert summary.total_records == 1
     assert inspection["total_records"] == 1
+    assert inspection["manifest_contract"]["version"] == manifest_module.MANIFEST_CONTRACT_VERSION
+    assert inspection["manifest_contract"]["stable_index_fields"] == list(
+        manifest_module.MANIFEST_STABLE_INDEX_FIELDS
+    )
+    assert isinstance(inspection["manifest_sha256"], str)
+    assert len(inspection["manifest_sha256"]) == 64
     assert inspection["task_counts"] == {"classification": 1}
     assert inspection["persisted_summary"]["total_records"] == 1
+
+
+def test_load_manifest_datasets_reads_generic_manifest_surface(tmp_path: Path) -> None:
+    root = tmp_path / "packed_shards"
+    _write_dataset(
+        root / "shard_00001_case",
+        metadata={
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "deferred", "status": "not_run"},
+            "observed_task": {"dataset_name": "generic_case"},
+        },
+    )
+    manifest_path = tmp_path / "manifest.parquet"
+    _ = manifest_module.build_manifest([root], manifest_path)
+
+    loaded = manifest_module.load_manifest_datasets(manifest_path)
+
+    assert loaded.contract_version == manifest_module.MANIFEST_CONTRACT_VERSION
+    assert len(loaded.manifest_sha256) == 64
+    assert list(loaded.datasets) == ["generic_case"]
+    x, y = loaded.datasets["generic_case"]
+    assert x.shape == (3, 2)
+    assert y.tolist() == [0, 1, 1]
+    assert loaded.task_records[0]["row_order_mode"] == "split_concat"
+    assert loaded.task_records[0]["metadata"]["observed_task"]["dataset_name"] == "generic_case"
 
 
 def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkeypatch) -> None:
@@ -182,3 +216,37 @@ def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkey
     assert payload["metadata"]["source_platform"] == "openml"
     assert payload["metadata"]["benchmark_bundle"]["source_path"] == str(bundle_path.resolve())
     assert payload["metadata"]["openml"]["task_id"] == 101
+
+    loaded = manifest_module.load_manifest_datasets(result.manifest_path)
+    first_x, first_y = loaded.datasets["first_dataset"]
+    expected = prepared_tasks[101]
+    assert np.array_equal(first_x, expected.x)
+    assert np.array_equal(first_y, expected.y)
+    assert len(loaded.manifest_sha256) == 64
+    assert loaded.task_records[0]["row_order_mode"] == "global_row_index"
+    assert loaded.task_records[0]["metadata"]["benchmark_bundle"]["source_path"] == str(bundle_path.resolve())
+
+
+def test_load_manifest_datasets_requires_contract_metadata(tmp_path: Path) -> None:
+    root = tmp_path / "packed_shards"
+    _write_dataset(
+        root / "shard_00001_case",
+        metadata={
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "deferred", "status": "not_run"},
+        },
+    )
+    manifest_path = tmp_path / "manifest.parquet"
+    _ = manifest_module.build_manifest([root], manifest_path)
+    table = pq.read_table(manifest_path)
+    pq.write_table(table.replace_schema_metadata(None), manifest_path)
+
+    try:
+        manifest_module.load_manifest_datasets(manifest_path)
+    except RuntimeError as exc:
+        assert "manifest contract metadata is missing" in str(exc)
+    else:  # pragma: no cover - defensive failure
+        raise AssertionError("expected missing contract metadata to raise")

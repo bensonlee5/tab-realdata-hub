@@ -32,6 +32,7 @@ dependencies = [
 
 [project.urls]
 Repository = "https://github.com/bensonlee5/tab-realdata-hub"
+Changelog = "https://github.com/bensonlee5/tab-realdata-hub/blob/main/CHANGELOG.md"
 
 [project.scripts]
 tab-realdata-hub = "tab_realdata_hub.cli:main"

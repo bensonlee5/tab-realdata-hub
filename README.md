@@ -3,6 +3,23 @@
 `tab-realdata-hub` materializes external tabular data sources into the
 manifest-backed packed-shard contract consumed by `tab-foundry`.
 
+`tab-realdata-hub` is the sole owner of that manifest contract. The parquet
+manifest is the stable index layer, and richer evolving dataset/provenance
+fields live in `metadata.ndjson`. Downstream consumers are expected to read
+through this package rather than reimplementing compatibility shims.
+
+Install from the upstream git tag with:
+
+```bash
+python -m pip install "tab-realdata-hub @ git+https://github.com/bensonlee5/tab-realdata-hub.git@v0.1.0"
+```
+
+For repo-local development:
+
+```bash
+uv sync
+```
+
 The v1 surface is OpenML-first:
 
 - build pinned OpenML bundle JSON from known task pools or live discovery
