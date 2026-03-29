@@ -50,67 +50,82 @@ uv sync
 ```
 
 The repo now tracks two hub-owned classification validation bundles for
-`tab-foundry` under `src/tab_realdata_hub/bench/`:
+`tab-foundry` under `src/tab_realdata_hub/bench/`, plus smaller curated
+real-only subsets:
 
-- `nanotabpfn_openml_classification_medium_v1.json`
-- `nanotabpfn_openml_classification_large_v1.json`
+- `openml_classification_medium_v1.json`
+- `openml_classification_medium_top10_v1.json`
+- `openml_classification_medium_top25_v1.json`
+- `openml_classification_medium_top50_v1.json`
+- `openml_classification_large_v1.json`
+- `openml_classification_large_top10_v1.json`
+- `openml_classification_large_top25_v1.json`
+- `openml_classification_large_top50_v1.json`
 
 The current TF-RD-010 contract is:
 
-- `medium`: no-missing multiclass validation with `max_features=10`,
-  `min_classes=3`, `max_classes=10`, and `min_minority_class_pct=2.5`
-- `large`: allow-missing multiclass validation with `max_features=20`,
-  `max_missing_pct=5.0`, `min_classes=3`, `max_classes=10`, and
-  `min_minority_class_pct=2.5`
+- official bundles are OpenML-only and exclude synthetic datasets such as
+  `BNG(...)`, `SEA(...)`, `RandomRBF`, `LED-display`, and `monks-problems-*`
+- bundle materialization uses full eligible datasets; there is no row
+  downsampling via `new_instances`
+- `medium`: `max_features=10`, `min_classes=2`, `max_classes=10`,
+  `max_missing_pct=20.0`, `min_minority_class_pct=1.0`
+- `large`: `max_features=20`, `min_classes=2`, `max_classes=10`,
+  `max_missing_pct=20.0`, `min_minority_class_pct=1.0`
+- `top10`, `top25`, and `top50` bundles are nested curated prefixes of the
+  same ranked real-only task pools for lighter-weight validation runs
 
-Refresh the checked-in bundle definitions from the pinned `tabarena_v0_1`
-source with:
+Build the aggregate candidate pools from the pinned `tabarena_v0_1` source
+with:
 
 ```bash
 .venv/bin/tab-realdata-hub bundle build-openml \
-  --out-path src/tab_realdata_hub/bench/nanotabpfn_openml_classification_medium_v1.json \
-  --bundle-name nanotabpfn_openml_classification_medium \
+  --out-path /tmp/openml_classification_medium_raw_v1.json \
+  --bundle-name openml_classification_medium \
   --version 1 \
   --task-source tabarena_v0_1 \
-  --new-instances 200 \
+  --min-instances 200 \
   --max-features 10 \
-  --min-classes 3 \
+  --min-classes 2 \
   --max-classes 10 \
-  --max-missing-pct 0.0 \
-  --min-minority-class-pct 2.5
+  --max-missing-pct 20.0 \
+  --min-minority-class-pct 1.0
 
 .venv/bin/tab-realdata-hub bundle build-openml \
-  --out-path src/tab_realdata_hub/bench/nanotabpfn_openml_classification_large_v1.json \
-  --bundle-name nanotabpfn_openml_classification_large \
+  --out-path /tmp/openml_classification_large_raw_v1.json \
+  --bundle-name openml_classification_large \
   --version 1 \
   --task-source tabarena_v0_1 \
-  --new-instances 200 \
+  --min-instances 200 \
   --max-features 20 \
-  --min-classes 3 \
+  --min-classes 2 \
   --max-classes 10 \
-  --max-missing-pct 5.0 \
-  --min-minority-class-pct 2.5
+  --max-missing-pct 20.0 \
+  --min-minority-class-pct 1.0
 ```
+
+The checked-in official bundle files are the synthetic-free aggregate pools and
+their curated `top10`/`top25`/`top50` prefixes.
 
 Materialize the checked-in bundle definitions into the manifest paths consumed
 downstream by `tab-foundry` with:
 
 ```bash
 .venv/bin/tab-realdata-hub materialize openml-bundle \
-  --bundle-path src/tab_realdata_hub/bench/nanotabpfn_openml_classification_medium_v1.json \
-  --out-root data/manifests/bench/nanotabpfn_openml_classification_medium_v1
+  --bundle-path src/tab_realdata_hub/bench/openml_classification_medium_v1.json \
+  --out-root data/manifests/bench/openml_classification_medium_v1
 
 .venv/bin/tab-realdata-hub materialize openml-bundle \
-  --bundle-path src/tab_realdata_hub/bench/nanotabpfn_openml_classification_large_v1.json \
-  --out-root data/manifests/bench/nanotabpfn_openml_classification_large_v1
+  --bundle-path src/tab_realdata_hub/bench/openml_classification_large_top50_v1.json \
+  --out-root data/manifests/bench/openml_classification_large_top50_v1
 ```
 
 Inspect the resulting manifests with:
 
 ```bash
 .venv/bin/tab-realdata-hub manifest inspect \
-  --manifest data/manifests/bench/nanotabpfn_openml_classification_medium_v1/manifest.parquet
+  --manifest data/manifests/bench/openml_classification_medium_v1/manifest.parquet
 
 .venv/bin/tab-realdata-hub manifest inspect \
-  --manifest data/manifests/bench/nanotabpfn_openml_classification_large_v1/manifest.parquet
+  --manifest data/manifests/bench/openml_classification_large_top50_v1/manifest.parquet
 ```

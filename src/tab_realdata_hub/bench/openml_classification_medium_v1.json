@@ -1,12 +1,11 @@
 {
-  "name": "nanotabpfn_openml_classification_medium",
+  "name": "openml_classification_medium",
   "selection": {
     "max_classes": 10,
     "max_features": 10,
     "max_missing_pct": 20.0,
     "min_classes": 2,
     "min_minority_class_pct": 1.0,
-    "new_instances": 200,
     "task_type": "supervised_classification"
   },
   "task_ids": [
@@ -19,18 +18,8 @@
     40,
     42,
     49,
-    139,
-    145,
-    206,
     219,
-    229,
-    230,
-    2142,
-    2146,
     3483,
-    3492,
-    3493,
-    3494,
     3508,
     3539,
     3542,
@@ -133,7 +122,6 @@
     10103,
     14963,
     52945,
-    125921,
     146093,
     146094,
     146095,
@@ -318,27 +306,6 @@
       "task_id": 49
     },
     {
-      "dataset_name": "BNG(breast-cancer,nominal,1000000)",
-      "n_classes": 2,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 139
-    },
-    {
-      "dataset_name": "BNG(cmc,nominal,55296)",
-      "n_classes": 3,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 145
-    },
-    {
-      "dataset_name": "BNG(tic-tac-toe)",
-      "n_classes": 2,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 206
-    },
-    {
       "dataset_name": "electricity",
       "n_classes": 2,
       "n_features": 8,
@@ -346,60 +313,11 @@
       "task_id": 219
     },
     {
-      "dataset_name": "SEA(50)",
-      "n_classes": 2,
-      "n_features": 3,
-      "n_rows": 200,
-      "task_id": 229
-    },
-    {
-      "dataset_name": "SEA(50000)",
-      "n_classes": 2,
-      "n_features": 3,
-      "n_rows": 200,
-      "task_id": 230
-    },
-    {
-      "dataset_name": "BNG(breast-w)",
-      "n_classes": 2,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 2142
-    },
-    {
-      "dataset_name": "BNG(cmc)",
-      "n_classes": 3,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 2146
-    },
-    {
       "dataset_name": "mammography",
       "n_classes": 2,
       "n_features": 6,
       "n_rows": 200,
       "task_id": 3483
-    },
-    {
-      "dataset_name": "monks-problems-1",
-      "n_classes": 2,
-      "n_features": 6,
-      "n_rows": 200,
-      "task_id": 3492
-    },
-    {
-      "dataset_name": "monks-problems-2",
-      "n_classes": 2,
-      "n_features": 6,
-      "n_rows": 200,
-      "task_id": 3493
-    },
-    {
-      "dataset_name": "monks-problems-3",
-      "n_classes": 2,
-      "n_features": 6,
-      "n_rows": 200,
-      "task_id": 3494
     },
     {
       "dataset_name": "UNIX_user_data",
@@ -1114,13 +1032,6 @@
       "n_features": 9,
       "n_rows": 200,
       "task_id": 52945
-    },
-    {
-      "dataset_name": "LED-display-domain-7digit",
-      "n_classes": 10,
-      "n_features": 7,
-      "n_rows": 200,
-      "task_id": 125921
     },
     {
       "dataset_name": "Agrawal1",

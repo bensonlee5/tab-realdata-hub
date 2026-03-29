@@ -1,0 +1,96 @@
+{
+  "name": "openml_classification_large_top10",
+  "selection": {
+    "max_classes": 10,
+    "max_features": 20,
+    "max_missing_pct": 20.0,
+    "min_classes": 2,
+    "min_minority_class_pct": 1.0,
+    "task_type": "supervised_classification"
+  },
+  "task_ids": [
+    11,
+    13,
+    15,
+    18,
+    23,
+    29,
+    32,
+    36,
+    37,
+    40
+  ],
+  "tasks": [
+    {
+      "dataset_name": "balance-scale",
+      "n_classes": 3,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 11
+    },
+    {
+      "dataset_name": "breast-cancer",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 13
+    },
+    {
+      "dataset_name": "breast-w",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 15
+    },
+    {
+      "dataset_name": "mfeat-morphological",
+      "n_classes": 10,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 18
+    },
+    {
+      "dataset_name": "cmc",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 23
+    },
+    {
+      "dataset_name": "credit-approval",
+      "n_classes": 2,
+      "n_features": 15,
+      "n_rows": 200,
+      "task_id": 29
+    },
+    {
+      "dataset_name": "pendigits",
+      "n_classes": 10,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 32
+    },
+    {
+      "dataset_name": "segment",
+      "n_classes": 7,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 36
+    },
+    {
+      "dataset_name": "diabetes",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 37
+    },
+    {
+      "dataset_name": "glass",
+      "n_classes": 6,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 40
+    }
+  ],
+  "version": 1
+}

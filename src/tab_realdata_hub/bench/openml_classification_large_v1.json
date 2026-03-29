@@ -1,12 +1,11 @@
 {
-  "name": "nanotabpfn_openml_classification_large",
+  "name": "openml_classification_large",
   "selection": {
     "max_classes": 10,
     "max_features": 20,
     "max_missing_pct": 20.0,
     "min_classes": 2,
     "min_minority_class_pct": 1.0,
-    "new_instances": 200,
     "task_type": "supervised_classification"
   },
   "task_ids": [
@@ -25,44 +24,13 @@
     49,
     52,
     53,
-    135,
-    138,
-    139,
-    142,
-    143,
-    145,
-    150,
-    153,
-    156,
-    206,
-    209,
-    210,
-    211,
-    212,
-    217,
     219,
     220,
     221,
-    224,
-    225,
-    229,
-    230,
     2071,
     2077,
     2079,
-    2137,
-    2140,
-    2142,
-    2146,
-    2253,
-    2256,
-    2262,
-    2263,
-    2264,
     3483,
-    3492,
-    3493,
-    3494,
     3508,
     3510,
     3539,
@@ -218,21 +186,11 @@
     10103,
     14963,
     52945,
-    125921,
     145679,
-    146087,
-    146089,
     146093,
     146094,
     146095,
     146096,
-    146139,
-    146140,
-    146141,
-    146142,
-    146143,
-    146146,
-    146147,
     146205,
     146207,
     146209,
@@ -247,7 +205,6 @@
     146688,
     146818,
     146820,
-    167042,
     167119,
     168861,
     189354,
@@ -737,111 +694,6 @@
       "task_id": 53
     },
     {
-      "dataset_name": "BNG(labor,nominal,1000000)",
-      "n_classes": 2,
-      "n_features": 16,
-      "n_rows": 200,
-      "task_id": 135
-    },
-    {
-      "dataset_name": "BNG(lymph,nominal,1000000)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 138
-    },
-    {
-      "dataset_name": "BNG(breast-cancer,nominal,1000000)",
-      "n_classes": 2,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 139
-    },
-    {
-      "dataset_name": "BNG(bridges_version1,nominal,1000000)",
-      "n_classes": 6,
-      "n_features": 12,
-      "n_rows": 200,
-      "task_id": 142
-    },
-    {
-      "dataset_name": "BNG(bridges_version2,nominal,1000000)",
-      "n_classes": 6,
-      "n_features": 12,
-      "n_rows": 200,
-      "task_id": 143
-    },
-    {
-      "dataset_name": "BNG(cmc,nominal,55296)",
-      "n_classes": 3,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 145
-    },
-    {
-      "dataset_name": "BNG(credit-a,nominal,1000000)",
-      "n_classes": 2,
-      "n_features": 14,
-      "n_rows": 200,
-      "task_id": 150
-    },
-    {
-      "dataset_name": "BNG(pendigits,nominal,1000000)",
-      "n_classes": 10,
-      "n_features": 16,
-      "n_rows": 200,
-      "task_id": 153
-    },
-    {
-      "dataset_name": "BNG(segment)",
-      "n_classes": 7,
-      "n_features": 17,
-      "n_rows": 200,
-      "task_id": 156
-    },
-    {
-      "dataset_name": "BNG(tic-tac-toe)",
-      "n_classes": 2,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 206
-    },
-    {
-      "dataset_name": "BNG(heart-statlog,nominal,1000000)",
-      "n_classes": 2,
-      "n_features": 13,
-      "n_rows": 200,
-      "task_id": 209
-    },
-    {
-      "dataset_name": "BNG(vehicle,nominal,1000000)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 210
-    },
-    {
-      "dataset_name": "BNG(hepatitis,nominal,1000000)",
-      "n_classes": 2,
-      "n_features": 19,
-      "n_rows": 200,
-      "task_id": 211
-    },
-    {
-      "dataset_name": "BNG(vote)",
-      "n_classes": 2,
-      "n_features": 16,
-      "n_rows": 200,
-      "task_id": 212
-    },
-    {
-      "dataset_name": "BNG(zoo,nominal,1000000)",
-      "n_classes": 7,
-      "n_features": 17,
-      "n_rows": 200,
-      "task_id": 217
-    },
-    {
       "dataset_name": "electricity",
       "n_classes": 2,
       "n_features": 8,
@@ -861,34 +713,6 @@
       "n_features": 10,
       "n_rows": 200,
       "task_id": 221
-    },
-    {
-      "dataset_name": "RandomRBF_0_0",
-      "n_classes": 5,
-      "n_features": 10,
-      "n_rows": 200,
-      "task_id": 224
-    },
-    {
-      "dataset_name": "RandomRBF_10_1E-3",
-      "n_classes": 5,
-      "n_features": 10,
-      "n_rows": 200,
-      "task_id": 225
-    },
-    {
-      "dataset_name": "SEA(50)",
-      "n_classes": 2,
-      "n_features": 3,
-      "n_rows": 200,
-      "task_id": 229
-    },
-    {
-      "dataset_name": "SEA(50000)",
-      "n_classes": 2,
-      "n_features": 3,
-      "n_rows": 200,
-      "task_id": 230
     },
     {
       "dataset_name": "adult",
@@ -912,95 +736,11 @@
       "task_id": 2079
     },
     {
-      "dataset_name": "BNG(labor)",
-      "n_classes": 2,
-      "n_features": 16,
-      "n_rows": 200,
-      "task_id": 2137
-    },
-    {
-      "dataset_name": "BNG(lymph)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 2140
-    },
-    {
-      "dataset_name": "BNG(breast-w)",
-      "n_classes": 2,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 2142
-    },
-    {
-      "dataset_name": "BNG(cmc)",
-      "n_classes": 3,
-      "n_features": 9,
-      "n_rows": 200,
-      "task_id": 2146
-    },
-    {
-      "dataset_name": "BNG(credit-a)",
-      "n_classes": 2,
-      "n_features": 15,
-      "n_rows": 200,
-      "task_id": 2253
-    },
-    {
-      "dataset_name": "BNG(pendigits)",
-      "n_classes": 10,
-      "n_features": 16,
-      "n_rows": 200,
-      "task_id": 2256
-    },
-    {
-      "dataset_name": "BNG(heart-statlog)",
-      "n_classes": 2,
-      "n_features": 13,
-      "n_rows": 200,
-      "task_id": 2262
-    },
-    {
-      "dataset_name": "BNG(vehicle)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 2263
-    },
-    {
-      "dataset_name": "BNG(hepatitis)",
-      "n_classes": 2,
-      "n_features": 19,
-      "n_rows": 200,
-      "task_id": 2264
-    },
-    {
       "dataset_name": "mammography",
       "n_classes": 2,
       "n_features": 6,
       "n_rows": 200,
       "task_id": 3483
-    },
-    {
-      "dataset_name": "monks-problems-1",
-      "n_classes": 2,
-      "n_features": 6,
-      "n_rows": 200,
-      "task_id": 3492
-    },
-    {
-      "dataset_name": "monks-problems-2",
-      "n_classes": 2,
-      "n_features": 6,
-      "n_rows": 200,
-      "task_id": 3493
-    },
-    {
-      "dataset_name": "monks-problems-3",
-      "n_classes": 2,
-      "n_features": 6,
-      "n_rows": 200,
-      "task_id": 3494
     },
     {
       "dataset_name": "UNIX_user_data",
@@ -2088,32 +1828,11 @@
       "task_id": 52945
     },
     {
-      "dataset_name": "LED-display-domain-7digit",
-      "n_classes": 10,
-      "n_features": 7,
-      "n_rows": 200,
-      "task_id": 125921
-    },
-    {
       "dataset_name": "thoracic_surgery",
       "n_classes": 2,
       "n_features": 16,
       "n_rows": 200,
       "task_id": 145679
-    },
-    {
-      "dataset_name": "BNG(solar-flare)",
-      "n_classes": 6,
-      "n_features": 12,
-      "n_rows": 200,
-      "task_id": 146087
-    },
-    {
-      "dataset_name": "BNG(adult)",
-      "n_classes": 2,
-      "n_features": 14,
-      "n_rows": 200,
-      "task_id": 146089
     },
     {
       "dataset_name": "Agrawal1",
@@ -2142,55 +1861,6 @@
       "n_features": 3,
       "n_rows": 200,
       "task_id": 146096
-    },
-    {
-      "dataset_name": "BNG(lymph,1000,1)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 146139
-    },
-    {
-      "dataset_name": "BNG(lymph,1000,5)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 146140
-    },
-    {
-      "dataset_name": "BNG(lymph,1000,10)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 146141
-    },
-    {
-      "dataset_name": "BNG(lymph,5000,1)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 146142
-    },
-    {
-      "dataset_name": "BNG(lymph,5000,5)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 146143
-    },
-    {
-      "dataset_name": "BNG(lymph,10000,5)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 146146
-    },
-    {
-      "dataset_name": "BNG(lymph,10000,10)",
-      "n_classes": 4,
-      "n_features": 18,
-      "n_rows": 200,
-      "task_id": 146147
     },
     {
       "dataset_name": "led7",
@@ -2289,13 +1959,6 @@
       "n_features": 5,
       "n_rows": 200,
       "task_id": 146820
-    },
-    {
-      "dataset_name": "BNG(Australian)",
-      "n_classes": 2,
-      "n_features": 14,
-      "n_rows": 200,
-      "task_id": 167042
     },
     {
       "dataset_name": "jungle_chess_2pcs_raw_endgame_complete",

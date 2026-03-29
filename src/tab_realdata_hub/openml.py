@@ -37,6 +37,13 @@ _OPENML_TASK_LISTING_MAX_INSTANCES = 1_000_000_000
 DEFAULT_OPENML_TASK_SOURCE = "tabarena_v0_1"
 DEFAULT_COMPARATOR_SPLIT_SEED = 0
 DEFAULT_COMPARATOR_TEST_SIZE = 0.20
+_SYNTHETIC_DATASET_NAME_PATTERNS = (
+    re.compile(r"^BNG\(", re.IGNORECASE),
+    re.compile(r"^SEA\(", re.IGNORECASE),
+    re.compile(r"^RandomRBF", re.IGNORECASE),
+    re.compile(r"^LED-display", re.IGNORECASE),
+    re.compile(r"^monks-problems-", re.IGNORECASE),
+)
 
 TABARENA_V0_1_TASK_IDS: tuple[int, ...] = (
     363612,
@@ -197,7 +204,6 @@ class OpenMLBundleConfig:
     version: int
     task_source: str = DEFAULT_OPENML_TASK_SOURCE
     task_type: str = _CLASSIFICATION_TASK_TYPE
-    new_instances: int = 200
     max_features: int = 10
     min_classes: int = 2
     max_classes: int | None = 2
@@ -265,7 +271,7 @@ class OpenMLMaterializationResult:
 
 
 class _PreparedTaskProvider(Protocol):
-    def __call__(self, task_id: int, *, new_instances: int, task_type: str) -> PreparedOpenMLTask: ...
+    def __call__(self, task_id: int, *, task_type: str) -> PreparedOpenMLTask: ...
 
 
 def task_source_names() -> tuple[str, ...]:
@@ -314,7 +320,7 @@ def task_type_value(task_type: TaskType | int) -> int:
 
 
 def get_feature_preprocessor(x: np.ndarray | pd.DataFrame) -> ColumnTransformer:
-    """Replicate the nanoTabPFN notebook preprocessing logic."""
+    """Replicate the repo's established OpenML preprocessing logic."""
 
     frame = pd.DataFrame(x)
     num_mask: list[bool] = []
@@ -368,6 +374,38 @@ def read_required_quality(raw_qualities: Any, *, task_id: int, quality_name: str
     return float(value)
 
 
+def synthetic_dataset_name_reason(dataset_name: str) -> str | None:
+    normalized = str(dataset_name).strip()
+    for pattern in _SYNTHETIC_DATASET_NAME_PATTERNS:
+        if pattern.search(normalized):
+            return f"dataset_name={normalized!r} matches synthetic deny pattern {pattern.pattern!r}"
+    return None
+
+
+def is_synthetic_dataset_name(dataset_name: str) -> bool:
+    return synthetic_dataset_name_reason(dataset_name) is not None
+
+
+def assert_real_dataset_name(dataset_name: str, *, context: str) -> None:
+    reason = synthetic_dataset_name_reason(dataset_name)
+    if reason is not None:
+        raise RuntimeError(f"{context}: {reason}")
+
+
+def benchmark_subset_preference_key(
+    *,
+    dataset_name: str,
+    task_id: int,
+    dataset_id: int | None = None,
+) -> tuple[int, int, int, int, str]:
+    normalized = " ".join(str(dataset_name).split()).casefold()
+    looks_parameterized = int(any(ch in normalized for ch in "(),"))
+    has_long_numeric_token = int(bool(re.search(r"\d{4,}", normalized)))
+    looks_complex = int(re.fullmatch(r"[a-z][a-z0-9 _-]*", normalized) is None)
+    identity = int(task_id if dataset_id is None else dataset_id)
+    return (looks_parameterized, has_long_numeric_token, looks_complex, identity, normalized)
+
+
 def _openml_task_type_for_bundle_task_type(task_type: str) -> int:
     if task_type == _CLASSIFICATION_TASK_TYPE:
         return task_type_value(TaskType.SUPERVISED_CLASSIFICATION)
@@ -379,7 +417,6 @@ def _openml_task_type_for_bundle_task_type(task_type: str) -> int:
 def prepare_task(
     task_id: int,
     *,
-    new_instances: int,
     task_type: str,
     get_task_fn: Any | None = None,
 ) -> PreparedOpenMLTask:
@@ -396,6 +433,7 @@ def prepare_task(
     task_any: Any = task
     dataset = task_any.get_dataset(download_data=False)
     dataset_any: Any = dataset
+    assert_real_dataset_name(str(dataset.name), context=f"OpenML task {task_id}")
     raw_qualities = dataset_any.qualities
     number_of_features = read_required_quality(
         raw_qualities,
@@ -425,20 +463,8 @@ def prepare_task(
         target=str(task_any.target_name),
         dataset_format="dataframe",
     )
-    if new_instances < int(len(cast(Any, y_raw))):
-        train_test_split_kwargs: dict[str, Any] = {
-            "test_size": new_instances,
-            "random_state": 0,
-        }
-        if task_type == _CLASSIFICATION_TASK_TYPE:
-            train_test_split_kwargs["stratify"] = y_raw
-        _x_unused, x_sub, _y_unused, y_sub = train_test_split(x_frame, y_raw, **train_test_split_kwargs)
-    else:
-        x_sub = x_frame
-        y_sub = y_raw
-
-    preprocessor = get_feature_preprocessor(x_sub)
-    x = np.asarray(preprocessor.fit_transform(x_sub), dtype=np.float32)
+    preprocessor = get_feature_preprocessor(x_frame)
+    x = np.asarray(preprocessor.fit_transform(x_frame), dtype=np.float32)
     observed_task = {
         "task_id": int(task_id),
         "dataset_name": str(dataset.name),
@@ -447,10 +473,10 @@ def prepare_task(
     }
     if task_type == _CLASSIFICATION_TASK_TYPE:
         label_encoder = LabelEncoder()
-        y = label_encoder.fit_transform(y_sub.to_numpy(copy=True)).astype(np.int64, copy=False)
+        y = label_encoder.fit_transform(y_raw.to_numpy(copy=True)).astype(np.int64, copy=False)
         observed_task["n_classes"] = int(np.unique(y).size)
     else:
-        y = np.asarray(pd.to_numeric(y_sub, errors="raise"), dtype=np.float32)
+        y = np.asarray(pd.to_numeric(y_raw, errors="raise"), dtype=np.float32)
     return PreparedOpenMLTask(
         task_id=int(task_id),
         task_type=str(task_type),
@@ -478,13 +504,12 @@ def _normalize_selection(payload: Any) -> dict[str, Any]:
         )
     if task_type == _CLASSIFICATION_TASK_TYPE:
         required_keys = {
-            "new_instances",
             "max_features",
             "max_classes",
             "max_missing_pct",
             "min_minority_class_pct",
         }
-        optional_keys = {"task_type", "min_classes"}
+        optional_keys = {"task_type", "min_classes", "new_instances"}
         actual_keys = set(payload.keys())
         if not required_keys.issubset(actual_keys) or not actual_keys.issubset(required_keys | optional_keys):
             raise RuntimeError(
@@ -492,25 +517,29 @@ def _normalize_selection(payload: Any) -> dict[str, Any]:
                 f"missing={sorted(required_keys - actual_keys)}, extra={sorted(actual_keys - (required_keys | optional_keys))}"
             )
     else:
-        expected_keys = {"new_instances", "task_type", "max_features", "max_missing_pct"}
+        expected_keys = {"task_type", "max_features", "max_missing_pct"}
+        optional_keys = {"new_instances"}
         actual_keys = set(payload.keys())
-        if actual_keys != expected_keys:
+        if not expected_keys.issubset(actual_keys) or not actual_keys.issubset(expected_keys | optional_keys):
             raise RuntimeError(
                 "benchmark bundle selection keys mismatch: "
-                f"missing={sorted(expected_keys - actual_keys)}, extra={sorted(actual_keys - expected_keys)}"
+                f"missing={sorted(expected_keys - actual_keys)}, extra={sorted(actual_keys - (expected_keys | optional_keys))}"
             )
 
-    new_instances = payload["new_instances"]
     max_features = payload["max_features"]
     max_missing_pct = payload["max_missing_pct"]
-    if not isinstance(new_instances, int) or isinstance(new_instances, bool) or new_instances <= 0:
-        raise RuntimeError("benchmark bundle selection.new_instances must be a positive int")
+    raw_new_instances = payload.get("new_instances")
+    if raw_new_instances is not None and (
+        not isinstance(raw_new_instances, int)
+        or isinstance(raw_new_instances, bool)
+        or raw_new_instances <= 0
+    ):
+        raise RuntimeError("benchmark bundle selection.new_instances must be a positive int when provided")
     if not isinstance(max_features, int) or isinstance(max_features, bool) or max_features <= 0:
         raise RuntimeError("benchmark bundle selection.max_features must be a positive int")
     if not isinstance(max_missing_pct, (int, float)) or not 0 <= float(max_missing_pct) <= 100:
         raise RuntimeError("benchmark bundle selection.max_missing_pct must be a percentage between 0 and 100")
     normalized = {
-        "new_instances": int(new_instances),
         "task_type": str(task_type),
         "max_features": int(max_features),
         "max_missing_pct": float(max_missing_pct),
@@ -721,6 +750,10 @@ def candidate_matches_listing_filters(
     candidate: OpenMLTaskCandidate,
     config: OpenMLBundleConfig,
 ) -> tuple[bool, str]:
+    if candidate.dataset_name is not None:
+        synthetic_reason = synthetic_dataset_name_reason(candidate.dataset_name)
+        if synthetic_reason is not None:
+            return False, synthetic_reason
     if candidate.number_of_instances is not None and candidate.number_of_instances < float(config.min_instances):
         return False, (
             f"number_of_instances={candidate.number_of_instances:g} below min_instances={config.min_instances}"
@@ -926,10 +959,11 @@ def validate_prepared_task(
     *,
     config: OpenMLBundleConfig,
 ) -> None:
-    if int(prepared.observed_task["n_rows"]) != int(config.new_instances):
+    assert_real_dataset_name(str(prepared.dataset_name), context=f"OpenML task {prepared.task_id}")
+    if int(prepared.observed_task["n_rows"]) < int(config.min_instances):
         raise RuntimeError(
-            "observed row count mismatch after subsampling: "
-            f"expected={config.new_instances}, actual={prepared.observed_task['n_rows']}"
+            "number_of_instances="
+            f"{prepared.observed_task['n_rows']} below min_instances={config.min_instances}"
         )
     number_of_features = float(prepared.qualities["NumberOfFeatures"])
     if number_of_features > float(config.max_features):
@@ -979,9 +1013,16 @@ def _collect_task_candidates(
         task_any: Any = task
         dataset = task_any.get_dataset(download_data=False)
         dataset_any: Any = dataset
+        dataset_name = str(dataset.name)
         raw_qualities = dataset_any.qualities
         candidate = OpenMLTaskCandidate(
             task_id=int(task_id),
+            dataset_name=dataset_name,
+            number_of_instances=read_required_quality(
+                raw_qualities,
+                task_id=int(task_id),
+                quality_name="NumberOfInstances",
+            ),
             number_of_features=read_required_quality(
                 raw_qualities,
                 task_id=int(task_id),
@@ -1012,7 +1053,10 @@ def _collect_task_candidates(
             ),
         )
         keep_candidate = (
-            candidate.number_of_features <= float(config.max_features)
+            not is_synthetic_dataset_name(dataset_name)
+            and candidate.number_of_instances is not None
+            and candidate.number_of_instances >= float(config.min_instances)
+            and candidate.number_of_features <= float(config.max_features)
             and candidate.missing_pct <= float(config.max_missing_pct)
         )
         if config.task_type == _CLASSIFICATION_TASK_TYPE:
@@ -1084,7 +1128,6 @@ def _resolve_selected_tasks(
         try:
             prepared = prepare_task_fn(
                 int(candidate.task_id),
-                new_instances=int(config.new_instances),
                 task_type=str(config.task_type),
             )
             validate_prepared_task(prepared, config=config)
@@ -1135,7 +1178,6 @@ def _resolve_selected_tasks(
 
 def bundle_selection_payload(config: OpenMLBundleConfig, *, max_classes: int) -> dict[str, Any]:
     payload = {
-        "new_instances": int(config.new_instances),
         "task_type": str(config.task_type),
         "max_features": int(config.max_features),
         "max_missing_pct": float(config.max_missing_pct),
@@ -1402,7 +1444,6 @@ def materialize_bundle(
     for task_order, task_id in enumerate(cast(list[int], bundle["task_ids"]), start=1):
         prepared = provider(
             int(task_id),
-            new_instances=int(selection["new_instances"]),
             task_type=str(selection["task_type"]),
         )
         x_train, x_test, y_train, y_test, train_idx, test_idx, split_mode = _split_prepared_task_indices(

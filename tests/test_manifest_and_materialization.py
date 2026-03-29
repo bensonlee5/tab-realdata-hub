@@ -192,13 +192,13 @@ def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkey
         encoding="utf-8",
     )
     prepared_tasks = {
-        101: _prepared_task(task_id=101, dataset_name="first_dataset", n_rows=10, n_features=3, n_classes=2),
-        102: _prepared_task(task_id=102, dataset_name="second_dataset", n_rows=10, n_features=2, n_classes=2),
+        101: _prepared_task(task_id=101, dataset_name="first_dataset", n_rows=12, n_features=3, n_classes=2),
+        102: _prepared_task(task_id=102, dataset_name="second_dataset", n_rows=14, n_features=2, n_classes=2),
     }
     monkeypatch.setattr(
         openml_module,
         "prepare_task",
-        lambda task_id, *, new_instances, task_type: prepared_tasks[int(task_id)],
+        lambda task_id, *, task_type: prepared_tasks[int(task_id)],
     )
 
     result = openml_module.materialize_bundle(bundle_path, tmp_path / "out")
@@ -215,6 +215,7 @@ def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkey
     assert payload["feature_types"] == ["floating", "floating", "floating"]
     assert payload["metadata"]["source_platform"] == "openml"
     assert payload["metadata"]["benchmark_bundle"]["source_path"] == str(bundle_path.resolve())
+    assert "new_instances" not in payload["metadata"]["benchmark_bundle"]["selection"]
     assert payload["metadata"]["openml"]["task_id"] == 101
 
     loaded = manifest_module.load_manifest_datasets(result.manifest_path)

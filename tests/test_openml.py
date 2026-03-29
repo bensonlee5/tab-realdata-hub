@@ -13,9 +13,10 @@ import tab_realdata_hub.openml as openml_module
 class FakeDataset:
     def __init__(self, *, name: str, qualities: dict[str, float], frame: pd.DataFrame, target: pd.Series) -> None:
         self.name = name
-        self.qualities = qualities
         self._frame = frame
         self._target = target
+        self.qualities = dict(qualities)
+        self.qualities.setdefault("NumberOfInstances", float(len(target)))
 
     def get_data(self, *, target: str, dataset_format: str) -> tuple[pd.DataFrame, pd.Series, list[bool], list[str]]:
         assert target == "target"
@@ -89,7 +90,6 @@ def test_prepare_task_preserves_notebook_style_preprocessing() -> None:
 
     prepared = openml_module.prepare_task(
         123,
-        new_instances=4,
         task_type="supervised_classification",
         get_task_fn=lambda *_args, **_kwargs: FakeTask(dataset),
     )
@@ -99,6 +99,27 @@ def test_prepare_task_preserves_notebook_style_preprocessing() -> None:
     assert prepared.y.dtype == np.int64
     assert prepared.observed_task["n_classes"] == 2
     assert sorted(np.unique(prepared.y).tolist()) == [0, 1]
+
+
+def test_prepare_task_rejects_synthetic_dataset_names() -> None:
+    dataset = FakeDataset(
+        name="BNG(example,nominal,1000000)",
+        qualities={
+            "NumberOfFeatures": 3.0,
+            "PercentageOfInstancesWithMissingValues": 0.0,
+            "NumberOfClasses": 2.0,
+            "MinorityClassPercentage": 50.0,
+        },
+        frame=pd.DataFrame({"a": [0, 1], "b": [1, 0], "c": [0, 1]}),
+        target=pd.Series([0, 1]),
+    )
+
+    with pytest.raises(RuntimeError, match="synthetic deny pattern"):
+        openml_module.prepare_task(
+            321,
+            task_type="supervised_classification",
+            get_task_fn=lambda *_args, **_kwargs: FakeTask(dataset),
+        )
 
 
 def test_build_bundle_from_pinned_task_ids_is_stable(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -117,10 +138,10 @@ def test_build_bundle_from_pinned_task_ids_is_stable(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(
         openml_module,
         "prepare_task",
-        lambda task_id, *, new_instances, task_type: _prepared_task(
+        lambda task_id, *, task_type: _prepared_task(
             task_id=int(task_id),
             dataset_name=f"task_{task_id}",
-            n_rows=int(new_instances),
+            n_rows=200,
             n_features=4,
             n_classes=2,
         ),
@@ -144,6 +165,37 @@ def test_build_bundle_from_pinned_task_ids_is_stable(monkeypatch: pytest.MonkeyP
     assert [task["dataset_name"] for task in bundle["tasks"]] == ["task_101", "task_102"]
     assert bundle["selection"]["max_features"] == 10
     assert bundle["selection"]["min_classes"] == 2
+    assert "new_instances" not in bundle["selection"]
+
+
+def test_build_bundle_from_pinned_task_ids_rejects_synthetic_dataset_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_dataset = FakeDataset(
+        name="SEA(50)",
+        qualities={
+            "NumberOfFeatures": 4.0,
+            "PercentageOfInstancesWithMissingValues": 0.0,
+            "NumberOfClasses": 2.0,
+            "MinorityClassPercentage": 25.0,
+        },
+        frame=pd.DataFrame({"a": [0, 1], "b": [1, 0], "c": [0, 0], "d": [1, 1]}),
+        target=pd.Series([0, 1]),
+    )
+    monkeypatch.setattr(openml_module.openml.tasks, "get_task", lambda *_args, **_kwargs: FakeTask(fake_dataset))
+
+    with pytest.raises(RuntimeError, match="produced no eligible tasks"):
+        openml_module.build_bundle(
+            openml_module.OpenMLBundleConfig(
+                bundle_name="synthetic_bundle",
+                version=1,
+                task_ids=(101,),
+                max_features=10,
+                max_classes=2,
+                max_missing_pct=0.0,
+                min_minority_class_pct=2.5,
+            )
+        )
 
 
 def test_build_bundle_discovery_uses_bounded_filters_and_dedupes(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -193,10 +245,10 @@ def test_build_bundle_discovery_uses_bounded_filters_and_dedupes(monkeypatch: py
     monkeypatch.setattr(
         openml_module,
         "prepare_task",
-        lambda task_id, *, new_instances, task_type: _prepared_task(
+        lambda task_id, *, task_type: _prepared_task(
             task_id=int(task_id),
             dataset_name="dup_dataset",
-            n_rows=int(new_instances),
+            n_rows=300,
             n_features=5,
             n_classes=2,
         ),
@@ -253,10 +305,10 @@ def test_build_bundle_discovery_falls_back_when_filtered_listing_fails(monkeypat
     monkeypatch.setattr(
         openml_module,
         "prepare_task",
-        lambda task_id, *, new_instances, task_type: _prepared_task(
+        lambda task_id, *, task_type: _prepared_task(
             task_id=int(task_id),
             dataset_name="fallback_ok",
-            n_rows=int(new_instances),
+            n_rows=400,
             n_features=4,
             n_classes=2,
         ),
@@ -289,7 +341,6 @@ def test_write_bundle_round_trips_stably(tmp_path: Path) -> None:
         "name": "manual_bundle",
         "version": 1,
         "selection": {
-            "new_instances": 200,
             "task_type": "supervised_classification",
             "max_features": 10,
             "max_missing_pct": 0.0,
@@ -308,6 +359,7 @@ def test_write_bundle_round_trips_stably(tmp_path: Path) -> None:
 
     loaded = json.loads(path.read_text(encoding="utf-8"))
     assert loaded["selection"]["min_classes"] == 2
+    assert "new_instances" not in loaded["selection"]
     assert loaded["task_ids"] == payload["task_ids"]
     assert loaded["tasks"] == payload["tasks"]
 
@@ -331,6 +383,7 @@ def test_normalize_bundle_defaults_missing_min_classes_for_older_bundles() -> No
     )
 
     assert bundle["selection"]["min_classes"] == 2
+    assert "new_instances" not in bundle["selection"]
 
 
 def test_build_bundle_discovery_rejects_tasks_below_min_classes(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -369,10 +422,10 @@ def test_build_bundle_discovery_rejects_tasks_below_min_classes(monkeypatch: pyt
     monkeypatch.setattr(
         openml_module,
         "prepare_task",
-        lambda task_id, *, new_instances, task_type: _prepared_task(
+        lambda task_id, *, task_type: _prepared_task(
             task_id=int(task_id),
             dataset_name="just_enough_classes",
-            n_rows=int(new_instances),
+            n_rows=300,
             n_features=5,
             n_classes=2,
             minority_class_pct=5.0,
@@ -433,10 +486,10 @@ def test_build_bundle_discovery_dedupes_by_dataset_name(monkeypatch: pytest.Monk
     monkeypatch.setattr(
         openml_module,
         "prepare_task",
-        lambda task_id, *, new_instances, task_type: _prepared_task(
+        lambda task_id, *, task_type: _prepared_task(
             task_id=int(task_id),
             dataset_name="same_name",
-            n_rows=int(new_instances),
+            n_rows=300,
             n_features=5,
             n_classes=2,
             minority_class_pct=5.0,
@@ -461,6 +514,69 @@ def test_build_bundle_discovery_dedupes_by_dataset_name(monkeypatch: pytest.Monk
     assert result.bundle["task_ids"] == [32]
     report = openml_module.render_candidate_report(result.report_entries)
     assert "duplicate dataset_name='same_name'; preferred task_id=32" in report
+
+
+def test_build_bundle_discovery_rejects_synthetic_dataset_names(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _fake_list_tasks(**kwargs: object) -> pd.DataFrame:
+        return pd.DataFrame(
+            [
+                {
+                    "tid": 51,
+                    "did": 31,
+                    "name": "BNG(vehicle)",
+                    "NumberOfInstances": 300,
+                    "NumberOfFeatures": 5,
+                    "NumberOfClasses": 2,
+                    "NumberOfInstancesWithMissingValues": 0,
+                    "MinorityClassSize": 10,
+                    "estimation_procedure": "10-fold Crossvalidation",
+                },
+                {
+                    "tid": 52,
+                    "did": 32,
+                    "name": "real_dataset",
+                    "NumberOfInstances": 300,
+                    "NumberOfFeatures": 5,
+                    "NumberOfClasses": 2,
+                    "NumberOfInstancesWithMissingValues": 0,
+                    "MinorityClassSize": 10,
+                    "estimation_procedure": "10-fold Crossvalidation",
+                },
+            ]
+        )
+
+    monkeypatch.setattr(openml_module.openml.tasks, "list_tasks", _fake_list_tasks)
+    monkeypatch.setattr(
+        openml_module,
+        "prepare_task",
+        lambda task_id, *, task_type: _prepared_task(
+            task_id=int(task_id),
+            dataset_name="real_dataset",
+            n_rows=300,
+            n_features=5,
+            n_classes=2,
+            minority_class_pct=5.0,
+        ),
+    )
+
+    result = openml_module.build_bundle_result(
+        openml_module.OpenMLBundleConfig(
+            bundle_name="classification_medium",
+            version=1,
+            discover_from_openml=True,
+            min_instances=200,
+            min_task_count=1,
+            max_features=10,
+            min_classes=2,
+            max_classes=10,
+            max_missing_pct=20.0,
+            min_minority_class_pct=1.0,
+        )
+    )
+
+    assert result.bundle["task_ids"] == [52]
+    report = openml_module.render_candidate_report(result.report_entries)
+    assert "synthetic deny pattern" in report
 
 
 def test_build_bundle_discovery_skips_candidate_prepare_exceptions(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -492,13 +608,13 @@ def test_build_bundle_discovery_skips_candidate_prepare_exceptions(monkeypatch: 
             ]
         )
 
-    def _fake_prepare_task(task_id: int, *, new_instances: int, task_type: str) -> openml_module.PreparedOpenMLTask:
+    def _fake_prepare_task(task_id: int, *, task_type: str) -> openml_module.PreparedOpenMLTask:
         if int(task_id) == 41:
             raise Exception("download failed")
         return _prepared_task(
             task_id=int(task_id),
             dataset_name="healthy_candidate",
-            n_rows=int(new_instances),
+            n_rows=300,
             n_features=5,
             n_classes=2,
             minority_class_pct=5.0,
@@ -551,6 +667,30 @@ def test_validate_prepared_task_enforces_min_classes() -> None:
         )
 
 
+def test_validate_prepared_task_enforces_min_instances() -> None:
+    prepared = _prepared_task(
+        task_id=102,
+        dataset_name="too_small",
+        n_rows=150,
+        n_features=4,
+        n_classes=2,
+    )
+
+    with pytest.raises(RuntimeError, match="below min_instances=200"):
+        openml_module.validate_prepared_task(
+            prepared,
+            config=openml_module.OpenMLBundleConfig(
+                bundle_name="classification_medium",
+                version=1,
+                min_instances=200,
+                min_classes=2,
+                max_classes=10,
+                max_missing_pct=20.0,
+                min_minority_class_pct=1.0,
+            ),
+        )
+
+
 def test_build_bundle_result_accepts_relaxed_missingness_and_minority_floor(monkeypatch: pytest.MonkeyPatch) -> None:
     fake_dataset = FakeDataset(
         name="relaxed_thresholds",
@@ -567,10 +707,10 @@ def test_build_bundle_result_accepts_relaxed_missingness_and_minority_floor(monk
     monkeypatch.setattr(
         openml_module,
         "prepare_task",
-        lambda task_id, *, new_instances, task_type: _prepared_task(
+        lambda task_id, *, task_type: _prepared_task(
             task_id=int(task_id),
             dataset_name="relaxed_thresholds",
-            n_rows=int(new_instances),
+            n_rows=200,
             n_features=4,
             n_classes=2,
             missing_pct=19.5,

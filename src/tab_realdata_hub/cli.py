@@ -65,7 +65,6 @@ def _run_bundle_build_openml(args: argparse.Namespace) -> int:
         version=int(args.version),
         task_source=str(args.task_source),
         task_type=str(args.task_type),
-        new_instances=int(args.new_instances),
         max_features=int(args.max_features),
         min_classes=int(args.min_classes),
         max_classes=parse_max_classes_arg(str(args.max_classes)),
@@ -152,7 +151,6 @@ def build_parser() -> argparse.ArgumentParser:
         choices=task_source_names(),
     )
     bundle_build_openml.add_argument("--discover-from-openml", action="store_true")
-    bundle_build_openml.add_argument("--new-instances", type=int, default=200)
     bundle_build_openml.add_argument("--min-instances", type=int, default=1)
     bundle_build_openml.add_argument("--min-task-count", type=int, default=1)
     bundle_build_openml.add_argument(
