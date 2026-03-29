@@ -199,6 +199,7 @@ class OpenMLBundleConfig:
     task_type: str = _CLASSIFICATION_TASK_TYPE
     new_instances: int = 200
     max_features: int = 10
+    min_classes: int = 2
     max_classes: int | None = 2
     max_missing_pct: float = 0.0
     min_minority_class_pct: float = 2.5
@@ -291,6 +292,21 @@ def parse_max_classes_arg(raw_value: str) -> int | None:
     if value <= 0:
         raise ValueError("max_classes must be a positive int or 'auto'")
     return value
+
+
+def _validate_bundle_config(config: OpenMLBundleConfig) -> None:
+    if int(config.min_instances) <= 0:
+        raise ValueError("min_instances must be a positive int")
+    if int(config.min_task_count) <= 0:
+        raise ValueError("min_task_count must be a positive int")
+    if str(config.task_type) != _CLASSIFICATION_TASK_TYPE:
+        return
+    if int(config.min_classes) < 2:
+        raise ValueError("min_classes must be an int >= 2")
+    if config.max_classes is not None and int(config.min_classes) > int(config.max_classes):
+        raise ValueError(
+            "min_classes must be less than or equal to max_classes when max_classes is set"
+        )
 
 
 def task_type_value(task_type: TaskType | int) -> int:
@@ -460,24 +476,29 @@ def _normalize_selection(payload: Any) -> dict[str, Any]:
             "benchmark bundle selection.task_type must be one of "
             f"{sorted(_ALLOWED_BUNDLE_SELECTION_TASK_TYPES)!r}"
         )
-    expected_keys = (
-        {
+    if task_type == _CLASSIFICATION_TASK_TYPE:
+        required_keys = {
             "new_instances",
             "max_features",
             "max_classes",
             "max_missing_pct",
             "min_minority_class_pct",
         }
-        | ({"task_type"} if "task_type" in payload else set())
-        if task_type == _CLASSIFICATION_TASK_TYPE
-        else {"new_instances", "task_type", "max_features", "max_missing_pct"}
-    )
-    actual_keys = set(payload.keys())
-    if actual_keys != expected_keys:
-        raise RuntimeError(
-            "benchmark bundle selection keys mismatch: "
-            f"missing={sorted(expected_keys - actual_keys)}, extra={sorted(actual_keys - expected_keys)}"
-        )
+        optional_keys = {"task_type", "min_classes"}
+        actual_keys = set(payload.keys())
+        if not required_keys.issubset(actual_keys) or not actual_keys.issubset(required_keys | optional_keys):
+            raise RuntimeError(
+                "benchmark bundle selection keys mismatch: "
+                f"missing={sorted(required_keys - actual_keys)}, extra={sorted(actual_keys - (required_keys | optional_keys))}"
+            )
+    else:
+        expected_keys = {"new_instances", "task_type", "max_features", "max_missing_pct"}
+        actual_keys = set(payload.keys())
+        if actual_keys != expected_keys:
+            raise RuntimeError(
+                "benchmark bundle selection keys mismatch: "
+                f"missing={sorted(expected_keys - actual_keys)}, extra={sorted(actual_keys - expected_keys)}"
+            )
 
     new_instances = payload["new_instances"]
     max_features = payload["max_features"]
@@ -495,14 +516,20 @@ def _normalize_selection(payload: Any) -> dict[str, Any]:
         "max_missing_pct": float(max_missing_pct),
     }
     if task_type == _CLASSIFICATION_TASK_TYPE:
+        min_classes = payload.get("min_classes", 2)
         max_classes = payload["max_classes"]
         min_minority_class_pct = payload["min_minority_class_pct"]
+        if not isinstance(min_classes, int) or isinstance(min_classes, bool) or min_classes < 2:
+            raise RuntimeError("benchmark bundle selection.min_classes must be an int >= 2")
         if not isinstance(max_classes, int) or isinstance(max_classes, bool) or max_classes <= 0:
             raise RuntimeError("benchmark bundle selection.max_classes must be a positive int")
+        if int(min_classes) > int(max_classes):
+            raise RuntimeError("benchmark bundle selection.min_classes must be <= max_classes")
         if not isinstance(min_minority_class_pct, (int, float)) or not 0 <= float(min_minority_class_pct) <= 100:
             raise RuntimeError(
                 "benchmark bundle selection.min_minority_class_pct must be a percentage between 0 and 100"
             )
+        normalized["min_classes"] = int(min_classes)
         normalized["max_classes"] = int(max_classes)
         normalized["min_minority_class_pct"] = float(min_minority_class_pct)
     return normalized
@@ -676,7 +703,7 @@ def _task_listing_rows_for_config(
         )
     listing_filters["number_features"] = f"0..{int(config.max_features)}"
     if config.task_type == _CLASSIFICATION_TASK_TYPE and config.max_classes is not None:
-        listing_filters["number_classes"] = int(config.max_classes)
+        listing_filters["number_classes"] = f"{int(config.min_classes)}..{int(config.max_classes)}"
     if float(config.max_missing_pct) <= 0.0:
         listing_filters["number_missing_values"] = 0
     try:
@@ -705,6 +732,10 @@ def candidate_matches_listing_filters(
     if config.task_type == _CLASSIFICATION_TASK_TYPE:
         if candidate.number_of_classes is None:
             return False, "number_of_classes missing from task listing"
+        if candidate.number_of_classes < float(config.min_classes):
+            return False, (
+                f"number_of_classes={candidate.number_of_classes:g} below min_classes={config.min_classes}"
+            )
         if config.max_classes is not None and candidate.number_of_classes > float(config.max_classes):
             return False, (
                 f"number_of_classes={candidate.number_of_classes:g} exceeds max_classes={config.max_classes}"
@@ -779,6 +810,16 @@ def is_preferred_ten_fold_cv(candidate: OpenMLTaskCandidate) -> bool:
     return "10-fold" in normalized and "crossvalidation" in normalized.replace(" ", "")
 
 
+def _candidate_preference_key(candidate: OpenMLTaskCandidate) -> tuple[int, int]:
+    return (0 if is_preferred_ten_fold_cv(candidate) else 1, int(candidate.task_id))
+
+
+def _normalized_dataset_name_key(dataset_name: str | None) -> str:
+    if dataset_name is None:
+        return ""
+    return " ".join(str(dataset_name).split()).casefold()
+
+
 def dedupe_discovered_candidates(
     candidates: list[OpenMLTaskCandidate],
 ) -> tuple[list[OpenMLTaskCandidate], list[OpenMLCandidateReportEntry]]:
@@ -790,10 +831,7 @@ def dedupe_discovered_candidates(
     selected: list[OpenMLTaskCandidate] = []
     report_entries: list[OpenMLCandidateReportEntry] = []
     for dataset_id, grouped_candidates in grouped.items():
-        preferred = min(
-            grouped_candidates,
-            key=lambda candidate: (0 if is_preferred_ten_fold_cv(candidate) else 1, int(candidate.task_id)),
-        )
+        preferred = min(grouped_candidates, key=_candidate_preference_key)
         selected.append(preferred)
         for candidate in grouped_candidates:
             if candidate.task_id == preferred.task_id:
@@ -811,7 +849,32 @@ def dedupe_discovered_candidates(
                     ),
                 )
             )
-    return selected, sorted(report_entries, key=lambda entry: int(entry.task_id))
+    grouped_by_name: dict[str, list[OpenMLTaskCandidate]] = {}
+    for candidate in selected:
+        grouped_by_name.setdefault(_normalized_dataset_name_key(candidate.dataset_name), []).append(candidate)
+    deduped_by_name: list[OpenMLTaskCandidate] = []
+    for normalized_name, grouped_candidates in grouped_by_name.items():
+        preferred = min(grouped_candidates, key=_candidate_preference_key)
+        deduped_by_name.append(preferred)
+        for candidate in grouped_candidates:
+            if candidate.task_id == preferred.task_id:
+                continue
+            report_entries.append(
+                OpenMLCandidateReportEntry(
+                    task_id=int(candidate.task_id),
+                    dataset_id=candidate.dataset_id,
+                    dataset_name=candidate.dataset_name,
+                    estimation_procedure=candidate.estimation_procedure,
+                    status="rejected",
+                    reason=(
+                        f"duplicate dataset_name={normalized_name!r}; preferred task_id={preferred.task_id} "
+                        f"via estimation_procedure={preferred.estimation_procedure or '<missing>'}"
+                    ),
+                )
+            )
+    return sorted(deduped_by_name, key=lambda candidate: int(candidate.task_id)), sorted(
+        report_entries, key=lambda entry: int(entry.task_id)
+    )
 
 
 def _collect_discovered_task_candidates(
@@ -875,6 +938,13 @@ def validate_prepared_task(
     if missing_pct > float(config.max_missing_pct):
         raise RuntimeError(f"missing_pct={missing_pct:g} exceeds max_missing_pct={config.max_missing_pct:g}")
     if config.task_type == _CLASSIFICATION_TASK_TYPE:
+        observed_number_of_classes = int(
+            prepared.observed_task.get("n_classes", prepared.qualities["NumberOfClasses"])
+        )
+        if observed_number_of_classes < int(config.min_classes):
+            raise RuntimeError(
+                f"number_of_classes={observed_number_of_classes:g} below min_classes={config.min_classes}"
+            )
         number_of_classes = float(prepared.qualities["NumberOfClasses"])
         if config.max_classes is not None and number_of_classes > float(config.max_classes):
             raise RuntimeError(f"number_of_classes={number_of_classes:g} exceeds max_classes={config.max_classes}")
@@ -948,6 +1018,8 @@ def _collect_task_candidates(
         if config.task_type == _CLASSIFICATION_TASK_TYPE:
             keep_candidate = (
                 keep_candidate
+                and candidate.number_of_classes is not None
+                and candidate.number_of_classes >= float(config.min_classes)
                 and candidate.minority_class_pct is not None
                 and candidate.minority_class_pct >= float(config.min_minority_class_pct)
             )
@@ -1001,6 +1073,7 @@ def _resolve_selected_tasks(
             candidate
             for candidate in eligible_candidates
             if candidate.number_of_classes is not None
+            and int(candidate.number_of_classes) >= int(config.min_classes)
             and int(candidate.number_of_classes) <= effective_max_classes
         ]
     )
@@ -1015,7 +1088,7 @@ def _resolve_selected_tasks(
                 task_type=str(config.task_type),
             )
             validate_prepared_task(prepared, config=config)
-        except RuntimeError as exc:
+        except Exception as exc:
             if config.discover_from_openml:
                 report_entries.append(
                     OpenMLCandidateReportEntry(
@@ -1068,6 +1141,7 @@ def bundle_selection_payload(config: OpenMLBundleConfig, *, max_classes: int) ->
         "max_missing_pct": float(config.max_missing_pct),
     }
     if config.task_type == _CLASSIFICATION_TASK_TYPE:
+        payload["min_classes"] = int(config.min_classes)
         payload["max_classes"] = int(max_classes)
         payload["min_minority_class_pct"] = float(config.min_minority_class_pct)
     return payload
@@ -1080,6 +1154,7 @@ def build_bundle_result(
     get_task_fn: Any | None = None,
     list_tasks_fn: Any | None = None,
 ) -> OpenMLBundleBuildResult:
+    _validate_bundle_config(config)
     selected_tasks, effective_max_classes, report_entries = _resolve_selected_tasks(
         config,
         prepare_task_fn=prepare_task if prepare_task_fn is None else prepare_task_fn,
