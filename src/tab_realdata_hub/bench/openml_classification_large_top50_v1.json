@@ -1,0 +1,416 @@
+{
+  "name": "openml_classification_large_top50",
+  "selection": {
+    "max_classes": 10,
+    "max_features": 20,
+    "max_missing_pct": 20.0,
+    "min_classes": 2,
+    "min_minority_class_pct": 1.0,
+    "task_type": "supervised_classification"
+  },
+  "task_ids": [
+    11,
+    13,
+    15,
+    18,
+    23,
+    29,
+    32,
+    36,
+    37,
+    40,
+    42,
+    48,
+    49,
+    52,
+    53,
+    219,
+    220,
+    221,
+    2071,
+    2077,
+    2079,
+    3483,
+    3508,
+    3510,
+    3539,
+    3542,
+    3543,
+    3544,
+    3546,
+    3547,
+    3555,
+    3560,
+    3564,
+    3570,
+    3574,
+    3578,
+    3583,
+    3586,
+    3587,
+    3590,
+    3591,
+    3594,
+    3596,
+    3599,
+    3601,
+    3603,
+    3610,
+    3615,
+    3616,
+    3629
+  ],
+  "tasks": [
+    {
+      "dataset_name": "balance-scale",
+      "n_classes": 3,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 11
+    },
+    {
+      "dataset_name": "breast-cancer",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 13
+    },
+    {
+      "dataset_name": "breast-w",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 15
+    },
+    {
+      "dataset_name": "mfeat-morphological",
+      "n_classes": 10,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 18
+    },
+    {
+      "dataset_name": "cmc",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 23
+    },
+    {
+      "dataset_name": "credit-approval",
+      "n_classes": 2,
+      "n_features": 15,
+      "n_rows": 200,
+      "task_id": 29
+    },
+    {
+      "dataset_name": "pendigits",
+      "n_classes": 10,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 32
+    },
+    {
+      "dataset_name": "segment",
+      "n_classes": 7,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 36
+    },
+    {
+      "dataset_name": "diabetes",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 37
+    },
+    {
+      "dataset_name": "glass",
+      "n_classes": 6,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 40
+    },
+    {
+      "dataset_name": "haberman",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 42
+    },
+    {
+      "dataset_name": "heart-c",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 48
+    },
+    {
+      "dataset_name": "tic-tac-toe",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 49
+    },
+    {
+      "dataset_name": "heart-statlog",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 52
+    },
+    {
+      "dataset_name": "vehicle",
+      "n_classes": 4,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 53
+    },
+    {
+      "dataset_name": "electricity",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 219
+    },
+    {
+      "dataset_name": "Hyperplane_10_1E-3",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 220
+    },
+    {
+      "dataset_name": "Hyperplane_10_1E-4",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 221
+    },
+    {
+      "dataset_name": "adult",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 2071
+    },
+    {
+      "dataset_name": "baseball",
+      "n_classes": 3,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 2077
+    },
+    {
+      "dataset_name": "eucalyptus",
+      "n_classes": 5,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 2079
+    },
+    {
+      "dataset_name": "mammography",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3483
+    },
+    {
+      "dataset_name": "UNIX_user_data",
+      "n_classes": 9,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3508
+    },
+    {
+      "dataset_name": "JapaneseVowels",
+      "n_classes": 9,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 3510
+    },
+    {
+      "dataset_name": "prnn_crabs",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3539
+    },
+    {
+      "dataset_name": "analcatdata_lawsuit",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3542
+    },
+    {
+      "dataset_name": "irish",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3543
+    },
+    {
+      "dataset_name": "analcatdata_broadwaymult",
+      "n_classes": 7,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3544
+    },
+    {
+      "dataset_name": "analcatdata_halloffame",
+      "n_classes": 3,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 3546
+    },
+    {
+      "dataset_name": "cars",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3547
+    },
+    {
+      "dataset_name": "prnn_synth",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3555
+    },
+    {
+      "dataset_name": "analcatdata_dmft",
+      "n_classes": 6,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3560
+    },
+    {
+      "dataset_name": "analcatdata_germangss",
+      "n_classes": 4,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3564
+    },
+    {
+      "dataset_name": "biomed",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3570
+    },
+    {
+      "dataset_name": "rmftsa_sleepdata",
+      "n_classes": 4,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3574
+    },
+    {
+      "dataset_name": "diggle_table_a2",
+      "n_classes": 9,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3578
+    },
+    {
+      "dataset_name": "rmftsa_ladata",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3583
+    },
+    {
+      "dataset_name": "abalone",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3586
+    },
+    {
+      "dataset_name": "pwLinear",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3587
+    },
+    {
+      "dataset_name": "analcatdata_vineyard",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3590
+    },
+    {
+      "dataset_name": "bank8FM",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3591
+    },
+    {
+      "dataset_name": "analcatdata_supreme",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3594
+    },
+    {
+      "dataset_name": "fri_c1_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3596
+    },
+    {
+      "dataset_name": "machine_cpu",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3599
+    },
+    {
+      "dataset_name": "cpu_small",
+      "n_classes": 2,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 3601
+    },
+    {
+      "dataset_name": "space_ga",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3603
+    },
+    {
+      "dataset_name": "fri_c3_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3610
+    },
+    {
+      "dataset_name": "fri_c3_500_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3615
+    },
+    {
+      "dataset_name": "pm10",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3616
+    },
+    {
+      "dataset_name": "fri_c0_250_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3629
+    }
+  ],
+  "version": 1
+}

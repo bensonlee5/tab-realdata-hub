@@ -1,0 +1,1864 @@
+{
+  "name": "openml_classification_medium",
+  "selection": {
+    "max_classes": 10,
+    "max_features": 10,
+    "max_missing_pct": 20.0,
+    "min_classes": 2,
+    "min_minority_class_pct": 1.0,
+    "task_type": "supervised_classification"
+  },
+  "task_ids": [
+    11,
+    13,
+    15,
+    18,
+    23,
+    37,
+    40,
+    42,
+    49,
+    219,
+    3483,
+    3508,
+    3539,
+    3542,
+    3543,
+    3544,
+    3547,
+    3555,
+    3560,
+    3564,
+    3570,
+    3574,
+    3578,
+    3586,
+    3590,
+    3591,
+    3594,
+    3596,
+    3599,
+    3603,
+    3609,
+    3610,
+    3615,
+    3616,
+    3630,
+    3631,
+    3633,
+    3636,
+    3638,
+    3640,
+    3642,
+    3657,
+    3660,
+    3661,
+    3664,
+    3668,
+    3672,
+    3676,
+    3678,
+    3679,
+    3681,
+    3684,
+    3688,
+    3692,
+    3696,
+    3706,
+    3708,
+    3709,
+    3724,
+    3734,
+    3735,
+    3747,
+    3749,
+    3758,
+    3763,
+    3769,
+    3770,
+    3771,
+    3772,
+    3774,
+    3775,
+    3777,
+    3786,
+    3788,
+    3794,
+    3797,
+    3802,
+    3810,
+    3812,
+    3813,
+    3814,
+    3815,
+    3820,
+    3822,
+    3831,
+    3847,
+    3854,
+    3874,
+    3899,
+    3901,
+    3921,
+    4001,
+    7290,
+    9911,
+    9924,
+    9925,
+    9926,
+    9939,
+    9941,
+    9944,
+    9952,
+    9958,
+    9961,
+    9962,
+    9963,
+    9965,
+    9988,
+    10091,
+    10093,
+    10101,
+    10103,
+    14963,
+    52945,
+    146093,
+    146094,
+    146095,
+    146096,
+    146205,
+    146209,
+    146216,
+    146219,
+    146226,
+    146230,
+    146237,
+    146688,
+    146820,
+    167119,
+    168861,
+    189354,
+    359994,
+    360913,
+    360930,
+    360981,
+    361037,
+    361056,
+    361273,
+    361284,
+    361650,
+    361660,
+    362099,
+    362122,
+    362306,
+    362333,
+    362345,
+    362375,
+    362412,
+    362416,
+    362607,
+    362608,
+    362609,
+    362610,
+    362611,
+    362617,
+    362618,
+    362619,
+    362620,
+    362621,
+    362647,
+    362648,
+    362649,
+    362650,
+    362651,
+    362652,
+    362653,
+    362654,
+    362655,
+    362656,
+    362732,
+    362734,
+    362735,
+    362736,
+    362737,
+    362772,
+    362774,
+    362775,
+    362776,
+    362777,
+    362837,
+    362839,
+    362840,
+    362841,
+    362842,
+    362858,
+    362859,
+    362860,
+    362861,
+    362862,
+    362863,
+    362864,
+    362865,
+    362866,
+    362868,
+    362953,
+    362954,
+    362955,
+    362956,
+    362957,
+    362963,
+    362964,
+    362965,
+    362966,
+    363018,
+    363019,
+    363020,
+    363024,
+    363025,
+    363087,
+    363108,
+    363131,
+    363135,
+    363137,
+    363140,
+    363142,
+    363143,
+    363144,
+    363322,
+    363405,
+    363450,
+    363459,
+    363506,
+    363507,
+    363527,
+    363532,
+    363538,
+    363565,
+    363633,
+    363634,
+    363669,
+    363737,
+    363739,
+    363741
+  ],
+  "tasks": [
+    {
+      "dataset_name": "balance-scale",
+      "n_classes": 3,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 11
+    },
+    {
+      "dataset_name": "breast-cancer",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 13
+    },
+    {
+      "dataset_name": "breast-w",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 15
+    },
+    {
+      "dataset_name": "mfeat-morphological",
+      "n_classes": 10,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 18
+    },
+    {
+      "dataset_name": "cmc",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 23
+    },
+    {
+      "dataset_name": "diabetes",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 37
+    },
+    {
+      "dataset_name": "glass",
+      "n_classes": 6,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 40
+    },
+    {
+      "dataset_name": "haberman",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 42
+    },
+    {
+      "dataset_name": "tic-tac-toe",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 49
+    },
+    {
+      "dataset_name": "electricity",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 219
+    },
+    {
+      "dataset_name": "mammography",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3483
+    },
+    {
+      "dataset_name": "UNIX_user_data",
+      "n_classes": 9,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3508
+    },
+    {
+      "dataset_name": "prnn_crabs",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3539
+    },
+    {
+      "dataset_name": "analcatdata_lawsuit",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3542
+    },
+    {
+      "dataset_name": "irish",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3543
+    },
+    {
+      "dataset_name": "analcatdata_broadwaymult",
+      "n_classes": 7,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3544
+    },
+    {
+      "dataset_name": "cars",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3547
+    },
+    {
+      "dataset_name": "prnn_synth",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3555
+    },
+    {
+      "dataset_name": "analcatdata_dmft",
+      "n_classes": 6,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3560
+    },
+    {
+      "dataset_name": "analcatdata_germangss",
+      "n_classes": 4,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3564
+    },
+    {
+      "dataset_name": "biomed",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3570
+    },
+    {
+      "dataset_name": "rmftsa_sleepdata",
+      "n_classes": 4,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3574
+    },
+    {
+      "dataset_name": "diggle_table_a2",
+      "n_classes": 9,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3578
+    },
+    {
+      "dataset_name": "abalone",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3586
+    },
+    {
+      "dataset_name": "analcatdata_vineyard",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3590
+    },
+    {
+      "dataset_name": "bank8FM",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3591
+    },
+    {
+      "dataset_name": "analcatdata_supreme",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3594
+    },
+    {
+      "dataset_name": "fri_c1_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3596
+    },
+    {
+      "dataset_name": "machine_cpu",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3599
+    },
+    {
+      "dataset_name": "space_ga",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3603
+    },
+    {
+      "dataset_name": "fri_c1_1000_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3609
+    },
+    {
+      "dataset_name": "fri_c3_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3610
+    },
+    {
+      "dataset_name": "fri_c3_500_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3615
+    },
+    {
+      "dataset_name": "pm10",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3616
+    },
+    {
+      "dataset_name": "analcatdata_apnea3",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3630
+    },
+    {
+      "dataset_name": "analcatdata_apnea2",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3631
+    },
+    {
+      "dataset_name": "analcatdata_apnea1",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3633
+    },
+    {
+      "dataset_name": "strikes",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3636
+    },
+    {
+      "dataset_name": "quake",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3638
+    },
+    {
+      "dataset_name": "disclosure_x_bias",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3640
+    },
+    {
+      "dataset_name": "fri_c0_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3642
+    },
+    {
+      "dataset_name": "fri_c2_500_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3657
+    },
+    {
+      "dataset_name": "disclosure_x_tampered",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3660
+    },
+    {
+      "dataset_name": "cpu",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3661
+    },
+    {
+      "dataset_name": "fri_c0_1000_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3664
+    },
+    {
+      "dataset_name": "delta_ailerons",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3668
+    },
+    {
+      "dataset_name": "kin8nm",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3672
+    },
+    {
+      "dataset_name": "rmftsa_ctoarrivals",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3676
+    },
+    {
+      "dataset_name": "fri_c3_1000_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3678
+    },
+    {
+      "dataset_name": "chscase_vine2",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3679
+    },
+    {
+      "dataset_name": "puma8NH",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3681
+    },
+    {
+      "dataset_name": "delta_elevators",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3684
+    },
+    {
+      "dataset_name": "houses",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3688
+    },
+    {
+      "dataset_name": "disclosure_x_noise",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3692
+    },
+    {
+      "dataset_name": "autoMpg",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3696
+    },
+    {
+      "dataset_name": "stock",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 3706
+    },
+    {
+      "dataset_name": "house_8L",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3708
+    },
+    {
+      "dataset_name": "breastTumor",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 3709
+    },
+    {
+      "dataset_name": "vinnie",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3724
+    },
+    {
+      "dataset_name": "fri_c1_500_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3734
+    },
+    {
+      "dataset_name": "pollen",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3735
+    },
+    {
+      "dataset_name": "fri_c0_500_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3747
+    },
+    {
+      "dataset_name": "no2",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3749
+    },
+    {
+      "dataset_name": "chscase_geyser1",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3758
+    },
+    {
+      "dataset_name": "chscase_census6",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3763
+    },
+    {
+      "dataset_name": "chscase_census5",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3769
+    },
+    {
+      "dataset_name": "chscase_census4",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3770
+    },
+    {
+      "dataset_name": "chscase_census3",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3771
+    },
+    {
+      "dataset_name": "chscase_census2",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3772
+    },
+    {
+      "dataset_name": "fri_c2_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3774
+    },
+    {
+      "dataset_name": "fri_c2_1000_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3775
+    },
+    {
+      "dataset_name": "balloon",
+      "n_classes": 2,
+      "n_features": 1,
+      "n_rows": 200,
+      "task_id": 3777
+    },
+    {
+      "dataset_name": "visualizing_soil",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3786
+    },
+    {
+      "dataset_name": "visualizing_galaxy",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3788
+    },
+    {
+      "dataset_name": "disclosure_z",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3794
+    },
+    {
+      "dataset_name": "socmob",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3797
+    },
+    {
+      "dataset_name": "chscase_whale",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3802
+    },
+    {
+      "dataset_name": "arsenic-male-bladder",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3810
+    },
+    {
+      "dataset_name": "arsenic-female-bladder",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3812
+    },
+    {
+      "dataset_name": "arsenic-female-lung",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3813
+    },
+    {
+      "dataset_name": "arsenic-male-lung",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3814
+    },
+    {
+      "dataset_name": "prnn_fglass",
+      "n_classes": 6,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 3815
+    },
+    {
+      "dataset_name": "braziltourism",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3820
+    },
+    {
+      "dataset_name": "nursery",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3822
+    },
+    {
+      "dataset_name": "analcatdata_birthday",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3831
+    },
+    {
+      "dataset_name": "analcatdata_draft",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3847
+    },
+    {
+      "dataset_name": "car",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3854
+    },
+    {
+      "dataset_name": "ecoli",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3874
+    },
+    {
+      "dataset_name": "mozilla4",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3899
+    },
+    {
+      "dataset_name": "jEdit_4.2_4.3",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3901
+    },
+    {
+      "dataset_name": "jEdit_4.0_4.2",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3921
+    },
+    {
+      "dataset_name": "pc1_req",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 4001
+    },
+    {
+      "dataset_name": "Click_prediction_small",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 7290
+    },
+    {
+      "dataset_name": "Amazon_employee_access",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 9911
+    },
+    {
+      "dataset_name": "volcanoes-a2",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 9924
+    },
+    {
+      "dataset_name": "volcanoes-a3",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 9925
+    },
+    {
+      "dataset_name": "volcanoes-a4",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 9926
+    },
+    {
+      "dataset_name": "vertebra-column",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 9939
+    },
+    {
+      "dataset_name": "wall-robot-navigation",
+      "n_classes": 4,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 9941
+    },
+    {
+      "dataset_name": "user-knowledge",
+      "n_classes": 5,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 9944
+    },
+    {
+      "dataset_name": "phoneme",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 9952
+    },
+    {
+      "dataset_name": "qualitative-bankruptcy",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 9958
+    },
+    {
+      "dataset_name": "sa-heart",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 9961
+    },
+    {
+      "dataset_name": "seeds",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 9962
+    },
+    {
+      "dataset_name": "seismic-bumps",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 9963
+    },
+    {
+      "dataset_name": "skin-segmentation",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 9965
+    },
+    {
+      "dataset_name": "wholesale-customers",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 9988
+    },
+    {
+      "dataset_name": "banana",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 10091
+    },
+    {
+      "dataset_name": "banknote-authentication",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 10093
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 10101
+    },
+    {
+      "dataset_name": "volcanoes-a1",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 10103
+    },
+    {
+      "dataset_name": "artificial-characters",
+      "n_classes": 10,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 14963
+    },
+    {
+      "dataset_name": "breast-cancer-dropped-missing-attributes-values",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 52945
+    },
+    {
+      "dataset_name": "Agrawal1",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 146093
+    },
+    {
+      "dataset_name": "Stagger1",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 146094
+    },
+    {
+      "dataset_name": "Stagger2",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 146095
+    },
+    {
+      "dataset_name": "Stagger3",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 146096
+    },
+    {
+      "dataset_name": "led7",
+      "n_classes": 10,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 146205
+    },
+    {
+      "dataset_name": "thyroid-new",
+      "n_classes": 3,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 146209
+    },
+    {
+      "dataset_name": "threeOf9",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 146216
+    },
+    {
+      "dataset_name": "xd6",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 146219
+    },
+    {
+      "dataset_name": "cars1",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 146226
+    },
+    {
+      "dataset_name": "Titanic",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 146230
+    },
+    {
+      "dataset_name": "cleveland-nominal",
+      "n_classes": 5,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 146237
+    },
+    {
+      "dataset_name": "Run_or_walk_information",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 146688
+    },
+    {
+      "dataset_name": "wilt",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 146820
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 167119
+    },
+    {
+      "dataset_name": "DRSongsLyrics",
+      "n_classes": 2,
+      "n_features": 1,
+      "n_rows": 200,
+      "task_id": 168861
+    },
+    {
+      "dataset_name": "airlines",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 189354
+    },
+    {
+      "dataset_name": "sf-police-incidents",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 359994
+    },
+    {
+      "dataset_name": "penguins",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 360913
+    },
+    {
+      "dataset_name": "art_daily_nojump4",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 360930
+    },
+    {
+      "dataset_name": "StackOverflow-polarity-test",
+      "n_classes": 3,
+      "n_features": 1,
+      "n_rows": 200,
+      "task_id": 360981
+    },
+    {
+      "dataset_name": "bank-marketing",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 361037
+    },
+    {
+      "dataset_name": "california",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 361056
+    },
+    {
+      "dataset_name": "Diabetes130US",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 361273
+    },
+    {
+      "dataset_name": "BitcoinHeist_Ransomware",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 361284
+    },
+    {
+      "dataset_name": "Tour-and-Travels-Customer-Churn-Prediction",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 361650
+    },
+    {
+      "dataset_name": "Mammographic-Mass-Data-Set",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 361660
+    },
+    {
+      "dataset_name": "Pulsar-Dataset-HTRU2",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362099
+    },
+    {
+      "dataset_name": "glass_clean",
+      "n_classes": 6,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362122
+    },
+    {
+      "dataset_name": "dgf_test",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362306
+    },
+    {
+      "dataset_name": "students_scores",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362333
+    },
+    {
+      "dataset_name": "1StudentPerfromance",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362345
+    },
+    {
+      "dataset_name": "Employee-Turnover-at-TECHCO",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362375
+    },
+    {
+      "dataset_name": "car_evaluation",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362412
+    },
+    {
+      "dataset_name": "eucalyptus",
+      "n_classes": 4,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362416
+    },
+    {
+      "dataset_name": "california_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362607
+    },
+    {
+      "dataset_name": "california_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362608
+    },
+    {
+      "dataset_name": "california_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362609
+    },
+    {
+      "dataset_name": "california_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362610
+    },
+    {
+      "dataset_name": "california_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362611
+    },
+    {
+      "dataset_name": "electricity_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362617
+    },
+    {
+      "dataset_name": "electricity_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362618
+    },
+    {
+      "dataset_name": "electricity_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362619
+    },
+    {
+      "dataset_name": "electricity_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362620
+    },
+    {
+      "dataset_name": "electricity_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362621
+    },
+    {
+      "dataset_name": "bank-marketing_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362647
+    },
+    {
+      "dataset_name": "bank-marketing_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362648
+    },
+    {
+      "dataset_name": "bank-marketing_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362649
+    },
+    {
+      "dataset_name": "bank-marketing_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362650
+    },
+    {
+      "dataset_name": "bank-marketing_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362651
+    },
+    {
+      "dataset_name": "phoneme_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362652
+    },
+    {
+      "dataset_name": "phoneme_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362653
+    },
+    {
+      "dataset_name": "phoneme_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362654
+    },
+    {
+      "dataset_name": "phoneme_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362655
+    },
+    {
+      "dataset_name": "phoneme_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362656
+    },
+    {
+      "dataset_name": "wilt_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362732
+    },
+    {
+      "dataset_name": "wilt_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362734
+    },
+    {
+      "dataset_name": "wilt_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362735
+    },
+    {
+      "dataset_name": "wilt_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362736
+    },
+    {
+      "dataset_name": "wilt_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362737
+    },
+    {
+      "dataset_name": "airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362772
+    },
+    {
+      "dataset_name": "airlines_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362774
+    },
+    {
+      "dataset_name": "airlines_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362775
+    },
+    {
+      "dataset_name": "airlines_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362776
+    },
+    {
+      "dataset_name": "airlines_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362777
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362837
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362839
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362840
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362841
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362842
+    },
+    {
+      "dataset_name": "cmc_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362858
+    },
+    {
+      "dataset_name": "cmc_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362859
+    },
+    {
+      "dataset_name": "cmc_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362860
+    },
+    {
+      "dataset_name": "cmc_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362861
+    },
+    {
+      "dataset_name": "cmc_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362862
+    },
+    {
+      "dataset_name": "car_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362863
+    },
+    {
+      "dataset_name": "car_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362864
+    },
+    {
+      "dataset_name": "car_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362865
+    },
+    {
+      "dataset_name": "car_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362866
+    },
+    {
+      "dataset_name": "car_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362868
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362953
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362954
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362955
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362956
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362957
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362963
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362964
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362965
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362966
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363018
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363019
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363020
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363024
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363025
+    },
+    {
+      "dataset_name": "AfriSenti",
+      "n_classes": 3,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363087
+    },
+    {
+      "dataset_name": "dummy",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363108
+    },
+    {
+      "dataset_name": "PriceRunner",
+      "n_classes": 10,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 363131
+    },
+    {
+      "dataset_name": "covertype",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363135
+    },
+    {
+      "dataset_name": "TestDatasetOfLocations",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363137
+    },
+    {
+      "dataset_name": "StudentsPerformance",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 363140
+    },
+    {
+      "dataset_name": "Test_Dataset",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 363142
+    },
+    {
+      "dataset_name": "Products",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363143
+    },
+    {
+      "dataset_name": "132",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363144
+    },
+    {
+      "dataset_name": "California-Housing-Classification",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363322
+    },
+    {
+      "dataset_name": "maternal_health_risk",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363405
+    },
+    {
+      "dataset_name": "student_lifestyle_dataset",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 363450
+    },
+    {
+      "dataset_name": "air-quality-and-pollution-assessment",
+      "n_classes": 4,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 363459
+    },
+    {
+      "dataset_name": "AVIDa-hIL6",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363506
+    },
+    {
+      "dataset_name": "AVIDa-SARS-CoV-2",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363507
+    },
+    {
+      "dataset_name": "product_sentiment_machine_hack",
+      "n_classes": 4,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 363527
+    },
+    {
+      "dataset_name": "kick_starter_funding",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363532
+    },
+    {
+      "dataset_name": "Dynamically-Generated-Hate-Speech-Dataset",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363538
+    },
+    {
+      "dataset_name": "sepsis_survival_minimal_clinical_records",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363565
+    },
+    {
+      "dataset_name": "Employee",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363633
+    },
+    {
+      "dataset_name": "Fitness_Club",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363634
+    },
+    {
+      "dataset_name": "website_phishing",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 363669
+    },
+    {
+      "dataset_name": "Accidents_Prediction_Dataset",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363737
+    },
+    {
+      "dataset_name": "Accidents_Prediction_Dataset_Pipeline",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363739
+    },
+    {
+      "dataset_name": "Accidents_Prediction_Balanced_v3",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363741
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,96 @@
+{
+  "name": "openml_classification_medium_top10",
+  "selection": {
+    "max_classes": 10,
+    "max_features": 10,
+    "max_missing_pct": 20.0,
+    "min_classes": 2,
+    "min_minority_class_pct": 1.0,
+    "task_type": "supervised_classification"
+  },
+  "task_ids": [
+    11,
+    13,
+    15,
+    18,
+    23,
+    37,
+    40,
+    42,
+    49,
+    219
+  ],
+  "tasks": [
+    {
+      "dataset_name": "balance-scale",
+      "n_classes": 3,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 11
+    },
+    {
+      "dataset_name": "breast-cancer",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 13
+    },
+    {
+      "dataset_name": "breast-w",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 15
+    },
+    {
+      "dataset_name": "mfeat-morphological",
+      "n_classes": 10,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 18
+    },
+    {
+      "dataset_name": "cmc",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 23
+    },
+    {
+      "dataset_name": "diabetes",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 37
+    },
+    {
+      "dataset_name": "glass",
+      "n_classes": 6,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 40
+    },
+    {
+      "dataset_name": "haberman",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 42
+    },
+    {
+      "dataset_name": "tic-tac-toe",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 49
+    },
+    {
+      "dataset_name": "electricity",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 219
+    }
+  ],
+  "version": 1
+}

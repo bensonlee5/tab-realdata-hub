@@ -65,8 +65,8 @@ def _run_bundle_build_openml(args: argparse.Namespace) -> int:
         version=int(args.version),
         task_source=str(args.task_source),
         task_type=str(args.task_type),
-        new_instances=int(args.new_instances),
         max_features=int(args.max_features),
+        min_classes=int(args.min_classes),
         max_classes=parse_max_classes_arg(str(args.max_classes)),
         max_missing_pct=float(args.max_missing_pct),
         min_minority_class_pct=float(args.min_minority_class_pct),
@@ -74,10 +74,6 @@ def _run_bundle_build_openml(args: argparse.Namespace) -> int:
         min_instances=int(args.min_instances),
         min_task_count=int(args.min_task_count),
     )
-    if config.min_instances <= 0:
-        raise ValueError("min_instances must be a positive int")
-    if config.min_task_count <= 0:
-        raise ValueError("min_task_count must be a positive int")
     if config.discover_from_openml:
         build_result = build_bundle_result(config)
         report = render_candidate_report(build_result.report_entries)
@@ -155,7 +151,6 @@ def build_parser() -> argparse.ArgumentParser:
         choices=task_source_names(),
     )
     bundle_build_openml.add_argument("--discover-from-openml", action="store_true")
-    bundle_build_openml.add_argument("--new-instances", type=int, default=200)
     bundle_build_openml.add_argument("--min-instances", type=int, default=1)
     bundle_build_openml.add_argument("--min-task-count", type=int, default=1)
     bundle_build_openml.add_argument(
@@ -164,6 +159,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("supervised_classification", "supervised_regression"),
     )
     bundle_build_openml.add_argument("--max-features", type=int, default=10)
+    bundle_build_openml.add_argument("--min-classes", type=int, default=2)
     bundle_build_openml.add_argument("--max-classes", default="2")
     bundle_build_openml.add_argument("--max-missing-pct", type=float, default=0.0)
     bundle_build_openml.add_argument("--min-minority-class-pct", type=float, default=2.5)

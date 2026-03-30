@@ -1,0 +1,4632 @@
+{
+  "name": "openml_classification_large",
+  "selection": {
+    "max_classes": 10,
+    "max_features": 20,
+    "max_missing_pct": 20.0,
+    "min_classes": 2,
+    "min_minority_class_pct": 1.0,
+    "task_type": "supervised_classification"
+  },
+  "task_ids": [
+    11,
+    13,
+    15,
+    18,
+    23,
+    29,
+    32,
+    36,
+    37,
+    40,
+    42,
+    48,
+    49,
+    52,
+    53,
+    219,
+    220,
+    221,
+    2071,
+    2077,
+    2079,
+    3483,
+    3508,
+    3510,
+    3539,
+    3542,
+    3543,
+    3544,
+    3546,
+    3547,
+    3555,
+    3560,
+    3564,
+    3570,
+    3574,
+    3578,
+    3583,
+    3586,
+    3587,
+    3590,
+    3591,
+    3593,
+    3594,
+    3596,
+    3599,
+    3601,
+    3603,
+    3606,
+    3609,
+    3610,
+    3615,
+    3616,
+    3617,
+    3629,
+    3630,
+    3631,
+    3633,
+    3636,
+    3638,
+    3640,
+    3642,
+    3644,
+    3651,
+    3657,
+    3658,
+    3660,
+    3661,
+    3663,
+    3664,
+    3668,
+    3672,
+    3676,
+    3678,
+    3679,
+    3681,
+    3684,
+    3685,
+    3686,
+    3688,
+    3689,
+    3691,
+    3692,
+    3695,
+    3696,
+    3706,
+    3708,
+    3709,
+    3710,
+    3711,
+    3712,
+    3718,
+    3720,
+    3724,
+    3727,
+    3733,
+    3734,
+    3735,
+    3744,
+    3745,
+    3747,
+    3749,
+    3758,
+    3760,
+    3763,
+    3764,
+    3769,
+    3770,
+    3771,
+    3772,
+    3773,
+    3774,
+    3775,
+    3776,
+    3777,
+    3778,
+    3786,
+    3788,
+    3794,
+    3797,
+    3798,
+    3799,
+    3802,
+    3806,
+    3810,
+    3812,
+    3813,
+    3814,
+    3815,
+    3820,
+    3822,
+    3831,
+    3840,
+    3847,
+    3854,
+    3874,
+    3879,
+    3884,
+    3890,
+    3899,
+    3901,
+    3921,
+    3937,
+    3953,
+    3954,
+    3955,
+    4001,
+    7290,
+    9894,
+    9899,
+    9903,
+    9905,
+    9906,
+    9911,
+    9924,
+    9925,
+    9926,
+    9939,
+    9941,
+    9944,
+    9947,
+    9952,
+    9958,
+    9961,
+    9962,
+    9963,
+    9965,
+    9966,
+    9969,
+    9971,
+    9983,
+    9988,
+    10091,
+    10093,
+    10101,
+    10103,
+    14963,
+    52945,
+    145679,
+    146093,
+    146094,
+    146095,
+    146096,
+    146205,
+    146207,
+    146209,
+    146213,
+    146216,
+    146219,
+    146226,
+    146230,
+    146232,
+    146236,
+    146237,
+    146688,
+    146818,
+    146820,
+    167119,
+    168861,
+    189354,
+    190134,
+    190140,
+    190403,
+    190424,
+    211977,
+    233166,
+    359994,
+    360665,
+    360666,
+    360667,
+    360668,
+    360669,
+    360670,
+    360671,
+    360672,
+    360673,
+    360674,
+    360675,
+    360676,
+    360677,
+    360678,
+    360679,
+    360680,
+    360681,
+    360682,
+    360683,
+    360684,
+    360685,
+    360686,
+    360687,
+    360688,
+    360689,
+    360690,
+    360691,
+    360692,
+    360693,
+    360694,
+    360695,
+    360696,
+    360697,
+    360698,
+    360700,
+    360702,
+    360704,
+    360706,
+    360707,
+    360708,
+    360709,
+    360710,
+    360711,
+    360712,
+    360714,
+    360715,
+    360716,
+    360717,
+    360718,
+    360719,
+    360720,
+    360721,
+    360722,
+    360723,
+    360724,
+    360725,
+    360726,
+    360727,
+    360730,
+    360731,
+    360732,
+    360733,
+    360736,
+    360738,
+    360739,
+    360740,
+    360741,
+    360742,
+    360743,
+    360744,
+    360745,
+    360746,
+    360747,
+    360748,
+    360749,
+    360750,
+    360751,
+    360754,
+    360755,
+    360756,
+    360757,
+    360758,
+    360759,
+    360760,
+    360761,
+    360764,
+    360765,
+    360766,
+    360767,
+    360769,
+    360770,
+    360771,
+    360772,
+    360773,
+    360775,
+    360778,
+    360779,
+    360781,
+    360784,
+    360785,
+    360787,
+    360788,
+    360790,
+    360793,
+    360797,
+    360798,
+    360799,
+    360800,
+    360801,
+    360802,
+    360804,
+    360806,
+    360808,
+    360809,
+    360811,
+    360812,
+    360815,
+    360816,
+    360819,
+    360821,
+    360822,
+    360823,
+    360824,
+    360825,
+    360826,
+    360831,
+    360832,
+    360833,
+    360835,
+    360841,
+    360846,
+    360848,
+    360851,
+    360852,
+    360853,
+    360854,
+    360913,
+    360930,
+    360981,
+    361018,
+    361020,
+    361044,
+    361055,
+    361056,
+    361057,
+    361107,
+    361114,
+    361116,
+    361273,
+    361284,
+    361302,
+    361309,
+    361650,
+    361659,
+    361660,
+    361946,
+    361950,
+    361966,
+    361983,
+    361984,
+    361988,
+    362082,
+    362083,
+    362099,
+    362100,
+    362103,
+    362122,
+    362162,
+    362178,
+    362202,
+    362204,
+    362235,
+    362254,
+    362263,
+    362275,
+    362277,
+    362282,
+    362288,
+    362306,
+    362333,
+    362345,
+    362362,
+    362373,
+    362375,
+    362412,
+    362541,
+    362542,
+    362562,
+    362563,
+    362572,
+    362591,
+    362594,
+    362595,
+    362596,
+    362597,
+    362607,
+    362608,
+    362609,
+    362610,
+    362611,
+    362612,
+    362613,
+    362614,
+    362615,
+    362616,
+    362617,
+    362618,
+    362619,
+    362620,
+    362621,
+    362622,
+    362623,
+    362624,
+    362625,
+    362626,
+    362632,
+    362633,
+    362634,
+    362635,
+    362636,
+    362642,
+    362643,
+    362644,
+    362645,
+    362646,
+    362647,
+    362648,
+    362649,
+    362650,
+    362651,
+    362652,
+    362653,
+    362654,
+    362655,
+    362656,
+    362693,
+    362694,
+    362695,
+    362696,
+    362697,
+    362703,
+    362704,
+    362705,
+    362706,
+    362707,
+    362727,
+    362729,
+    362730,
+    362731,
+    362732,
+    362733,
+    362734,
+    362735,
+    362736,
+    362737,
+    362772,
+    362774,
+    362775,
+    362776,
+    362777,
+    362792,
+    362794,
+    362795,
+    362796,
+    362797,
+    362829,
+    362830,
+    362831,
+    362833,
+    362835,
+    362837,
+    362839,
+    362840,
+    362841,
+    362842,
+    362858,
+    362859,
+    362860,
+    362861,
+    362862,
+    362863,
+    362864,
+    362865,
+    362866,
+    362868,
+    362878,
+    362879,
+    362880,
+    362881,
+    362882,
+    362953,
+    362954,
+    362955,
+    362956,
+    362957,
+    362963,
+    362964,
+    362965,
+    362966,
+    362967,
+    362968,
+    362969,
+    362970,
+    362971,
+    362973,
+    363011,
+    363012,
+    363013,
+    363014,
+    363017,
+    363018,
+    363019,
+    363020,
+    363024,
+    363025,
+    363055,
+    363087,
+    363108,
+    363131,
+    363137,
+    363140,
+    363142,
+    363143,
+    363144,
+    363230,
+    363292,
+    363322,
+    363323,
+    363339,
+    363365,
+    363381,
+    363384,
+    363401,
+    363402,
+    363403,
+    363405,
+    363410,
+    363429,
+    363441,
+    363446,
+    363450,
+    363456,
+    363459,
+    363462,
+    363506,
+    363507,
+    363508,
+    363509,
+    363527,
+    363532,
+    363538,
+    363543,
+    363565,
+    363584,
+    363589,
+    363619,
+    363623,
+    363632,
+    363633,
+    363634,
+    363636,
+    363642,
+    363645,
+    363653,
+    363657,
+    363661,
+    363669,
+    363736,
+    363737,
+    363739,
+    363741
+  ],
+  "tasks": [
+    {
+      "dataset_name": "balance-scale",
+      "n_classes": 3,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 11
+    },
+    {
+      "dataset_name": "breast-cancer",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 13
+    },
+    {
+      "dataset_name": "breast-w",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 15
+    },
+    {
+      "dataset_name": "mfeat-morphological",
+      "n_classes": 10,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 18
+    },
+    {
+      "dataset_name": "cmc",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 23
+    },
+    {
+      "dataset_name": "credit-approval",
+      "n_classes": 2,
+      "n_features": 15,
+      "n_rows": 200,
+      "task_id": 29
+    },
+    {
+      "dataset_name": "pendigits",
+      "n_classes": 10,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 32
+    },
+    {
+      "dataset_name": "segment",
+      "n_classes": 7,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 36
+    },
+    {
+      "dataset_name": "diabetes",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 37
+    },
+    {
+      "dataset_name": "glass",
+      "n_classes": 6,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 40
+    },
+    {
+      "dataset_name": "haberman",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 42
+    },
+    {
+      "dataset_name": "heart-c",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 48
+    },
+    {
+      "dataset_name": "tic-tac-toe",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 49
+    },
+    {
+      "dataset_name": "heart-statlog",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 52
+    },
+    {
+      "dataset_name": "vehicle",
+      "n_classes": 4,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 53
+    },
+    {
+      "dataset_name": "electricity",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 219
+    },
+    {
+      "dataset_name": "Hyperplane_10_1E-3",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 220
+    },
+    {
+      "dataset_name": "Hyperplane_10_1E-4",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 221
+    },
+    {
+      "dataset_name": "adult",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 2071
+    },
+    {
+      "dataset_name": "baseball",
+      "n_classes": 3,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 2077
+    },
+    {
+      "dataset_name": "eucalyptus",
+      "n_classes": 5,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 2079
+    },
+    {
+      "dataset_name": "mammography",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3483
+    },
+    {
+      "dataset_name": "UNIX_user_data",
+      "n_classes": 9,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3508
+    },
+    {
+      "dataset_name": "JapaneseVowels",
+      "n_classes": 9,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 3510
+    },
+    {
+      "dataset_name": "prnn_crabs",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3539
+    },
+    {
+      "dataset_name": "analcatdata_lawsuit",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3542
+    },
+    {
+      "dataset_name": "irish",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3543
+    },
+    {
+      "dataset_name": "analcatdata_broadwaymult",
+      "n_classes": 7,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3544
+    },
+    {
+      "dataset_name": "analcatdata_halloffame",
+      "n_classes": 3,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 3546
+    },
+    {
+      "dataset_name": "cars",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3547
+    },
+    {
+      "dataset_name": "prnn_synth",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3555
+    },
+    {
+      "dataset_name": "analcatdata_dmft",
+      "n_classes": 6,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3560
+    },
+    {
+      "dataset_name": "analcatdata_germangss",
+      "n_classes": 4,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3564
+    },
+    {
+      "dataset_name": "biomed",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3570
+    },
+    {
+      "dataset_name": "rmftsa_sleepdata",
+      "n_classes": 4,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3574
+    },
+    {
+      "dataset_name": "diggle_table_a2",
+      "n_classes": 9,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3578
+    },
+    {
+      "dataset_name": "rmftsa_ladata",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3583
+    },
+    {
+      "dataset_name": "abalone",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3586
+    },
+    {
+      "dataset_name": "pwLinear",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3587
+    },
+    {
+      "dataset_name": "analcatdata_vineyard",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3590
+    },
+    {
+      "dataset_name": "bank8FM",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3591
+    },
+    {
+      "dataset_name": "2dplanes",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3593
+    },
+    {
+      "dataset_name": "analcatdata_supreme",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3594
+    },
+    {
+      "dataset_name": "fri_c1_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3596
+    },
+    {
+      "dataset_name": "machine_cpu",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3599
+    },
+    {
+      "dataset_name": "cpu_small",
+      "n_classes": 2,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 3601
+    },
+    {
+      "dataset_name": "space_ga",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3603
+    },
+    {
+      "dataset_name": "fri_c3_1000_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3606
+    },
+    {
+      "dataset_name": "fri_c1_1000_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3609
+    },
+    {
+      "dataset_name": "fri_c3_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3610
+    },
+    {
+      "dataset_name": "fri_c3_500_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3615
+    },
+    {
+      "dataset_name": "pm10",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3616
+    },
+    {
+      "dataset_name": "fri_c4_1000_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3617
+    },
+    {
+      "dataset_name": "fri_c0_250_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3629
+    },
+    {
+      "dataset_name": "analcatdata_apnea3",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3630
+    },
+    {
+      "dataset_name": "analcatdata_apnea2",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3631
+    },
+    {
+      "dataset_name": "analcatdata_apnea1",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3633
+    },
+    {
+      "dataset_name": "strikes",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3636
+    },
+    {
+      "dataset_name": "quake",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3638
+    },
+    {
+      "dataset_name": "disclosure_x_bias",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3640
+    },
+    {
+      "dataset_name": "fri_c0_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3642
+    },
+    {
+      "dataset_name": "bodyfat",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 3644
+    },
+    {
+      "dataset_name": "cleveland",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 3651
+    },
+    {
+      "dataset_name": "fri_c2_500_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3657
+    },
+    {
+      "dataset_name": "fri_c3_250_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3658
+    },
+    {
+      "dataset_name": "disclosure_x_tampered",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3660
+    },
+    {
+      "dataset_name": "cpu",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3661
+    },
+    {
+      "dataset_name": "cholesterol",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 3663
+    },
+    {
+      "dataset_name": "fri_c0_1000_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3664
+    },
+    {
+      "dataset_name": "delta_ailerons",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3668
+    },
+    {
+      "dataset_name": "kin8nm",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3672
+    },
+    {
+      "dataset_name": "rmftsa_ctoarrivals",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3676
+    },
+    {
+      "dataset_name": "fri_c3_1000_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3678
+    },
+    {
+      "dataset_name": "chscase_vine2",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3679
+    },
+    {
+      "dataset_name": "puma8NH",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3681
+    },
+    {
+      "dataset_name": "delta_elevators",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3684
+    },
+    {
+      "dataset_name": "chatfield_4",
+      "n_classes": 2,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 3685
+    },
+    {
+      "dataset_name": "house_16H",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 3686
+    },
+    {
+      "dataset_name": "houses",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3688
+    },
+    {
+      "dataset_name": "fri_c1_500_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3689
+    },
+    {
+      "dataset_name": "sensory",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 3691
+    },
+    {
+      "dataset_name": "disclosure_x_noise",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3692
+    },
+    {
+      "dataset_name": "fri_c2_250_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3695
+    },
+    {
+      "dataset_name": "autoMpg",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3696
+    },
+    {
+      "dataset_name": "stock",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 3706
+    },
+    {
+      "dataset_name": "house_8L",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3708
+    },
+    {
+      "dataset_name": "breastTumor",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 3709
+    },
+    {
+      "dataset_name": "fri_c0_1000_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3710
+    },
+    {
+      "dataset_name": "elevators",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 3711
+    },
+    {
+      "dataset_name": "wind",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 3712
+    },
+    {
+      "dataset_name": "boston",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 3718
+    },
+    {
+      "dataset_name": "fri_c4_500_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3720
+    },
+    {
+      "dataset_name": "vinnie",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3724
+    },
+    {
+      "dataset_name": "fri_c4_250_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3727
+    },
+    {
+      "dataset_name": "fri_c2_500_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3733
+    },
+    {
+      "dataset_name": "fri_c1_500_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3734
+    },
+    {
+      "dataset_name": "pollen",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3735
+    },
+    {
+      "dataset_name": "mu284",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3744
+    },
+    {
+      "dataset_name": "mv",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3745
+    },
+    {
+      "dataset_name": "fri_c0_500_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3747
+    },
+    {
+      "dataset_name": "no2",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3749
+    },
+    {
+      "dataset_name": "chscase_geyser1",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 3758
+    },
+    {
+      "dataset_name": "colleges_aaup",
+      "n_classes": 2,
+      "n_features": 15,
+      "n_rows": 200,
+      "task_id": 3760
+    },
+    {
+      "dataset_name": "chscase_census6",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3763
+    },
+    {
+      "dataset_name": "fried",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3764
+    },
+    {
+      "dataset_name": "chscase_census5",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3769
+    },
+    {
+      "dataset_name": "chscase_census4",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3770
+    },
+    {
+      "dataset_name": "chscase_census3",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3771
+    },
+    {
+      "dataset_name": "chscase_census2",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3772
+    },
+    {
+      "dataset_name": "fri_c1_1000_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3773
+    },
+    {
+      "dataset_name": "fri_c2_250_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3774
+    },
+    {
+      "dataset_name": "fri_c2_1000_5",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3775
+    },
+    {
+      "dataset_name": "fri_c2_1000_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3776
+    },
+    {
+      "dataset_name": "balloon",
+      "n_classes": 2,
+      "n_features": 1,
+      "n_rows": 200,
+      "task_id": 3777
+    },
+    {
+      "dataset_name": "plasma_retinol",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 3778
+    },
+    {
+      "dataset_name": "visualizing_soil",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3786
+    },
+    {
+      "dataset_name": "visualizing_galaxy",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3788
+    },
+    {
+      "dataset_name": "disclosure_z",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3794
+    },
+    {
+      "dataset_name": "socmob",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3797
+    },
+    {
+      "dataset_name": "fri_c1_250_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3798
+    },
+    {
+      "dataset_name": "fri_c3_500_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3799
+    },
+    {
+      "dataset_name": "chscase_whale",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3802
+    },
+    {
+      "dataset_name": "fri_c0_500_10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3806
+    },
+    {
+      "dataset_name": "arsenic-male-bladder",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3810
+    },
+    {
+      "dataset_name": "arsenic-female-bladder",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3812
+    },
+    {
+      "dataset_name": "arsenic-female-lung",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3813
+    },
+    {
+      "dataset_name": "arsenic-male-lung",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3814
+    },
+    {
+      "dataset_name": "prnn_fglass",
+      "n_classes": 6,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 3815
+    },
+    {
+      "dataset_name": "braziltourism",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3820
+    },
+    {
+      "dataset_name": "nursery",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3822
+    },
+    {
+      "dataset_name": "analcatdata_birthday",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 3831
+    },
+    {
+      "dataset_name": "letter",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 3840
+    },
+    {
+      "dataset_name": "analcatdata_draft",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 3847
+    },
+    {
+      "dataset_name": "car",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 3854
+    },
+    {
+      "dataset_name": "ecoli",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 3874
+    },
+    {
+      "dataset_name": "vowel",
+      "n_classes": 2,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 3879
+    },
+    {
+      "dataset_name": "page-blocks",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3884
+    },
+    {
+      "dataset_name": "ada_prior",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 3890
+    },
+    {
+      "dataset_name": "mozilla4",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 3899
+    },
+    {
+      "dataset_name": "jEdit_4.2_4.3",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3901
+    },
+    {
+      "dataset_name": "jEdit_4.0_4.2",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 3921
+    },
+    {
+      "dataset_name": "PopularKids",
+      "n_classes": 3,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3937
+    },
+    {
+      "dataset_name": "adult-census",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 3953
+    },
+    {
+      "dataset_name": "MagicTelescope",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3954
+    },
+    {
+      "dataset_name": "badges2",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 3955
+    },
+    {
+      "dataset_name": "pc1_req",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 4001
+    },
+    {
+      "dataset_name": "Click_prediction_small",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 7290
+    },
+    {
+      "dataset_name": "heart-h",
+      "n_classes": 5,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 9894
+    },
+    {
+      "dataset_name": "bank-marketing",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 9899
+    },
+    {
+      "dataset_name": "autoUniv-au7-500",
+      "n_classes": 5,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 9903
+    },
+    {
+      "dataset_name": "autoUniv-au7-700",
+      "n_classes": 3,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 9905
+    },
+    {
+      "dataset_name": "autoUniv-au7-1100",
+      "n_classes": 5,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 9906
+    },
+    {
+      "dataset_name": "Amazon_employee_access",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 9911
+    },
+    {
+      "dataset_name": "volcanoes-a2",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 9924
+    },
+    {
+      "dataset_name": "volcanoes-a3",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 9925
+    },
+    {
+      "dataset_name": "volcanoes-a4",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 9926
+    },
+    {
+      "dataset_name": "vertebra-column",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 9939
+    },
+    {
+      "dataset_name": "wall-robot-navigation",
+      "n_classes": 4,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 9941
+    },
+    {
+      "dataset_name": "user-knowledge",
+      "n_classes": 5,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 9944
+    },
+    {
+      "dataset_name": "heart-long-beach",
+      "n_classes": 5,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 9947
+    },
+    {
+      "dataset_name": "phoneme",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 9952
+    },
+    {
+      "dataset_name": "qualitative-bankruptcy",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 9958
+    },
+    {
+      "dataset_name": "sa-heart",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 9961
+    },
+    {
+      "dataset_name": "seeds",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 9962
+    },
+    {
+      "dataset_name": "seismic-bumps",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 9963
+    },
+    {
+      "dataset_name": "skin-segmentation",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 9965
+    },
+    {
+      "dataset_name": "spoken-arabic-digit",
+      "n_classes": 10,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 9966
+    },
+    {
+      "dataset_name": "thoracic-surgery",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 9969
+    },
+    {
+      "dataset_name": "ilpd",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 9971
+    },
+    {
+      "dataset_name": "eeg-eye-state",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 9983
+    },
+    {
+      "dataset_name": "wholesale-customers",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 9988
+    },
+    {
+      "dataset_name": "banana",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 10091
+    },
+    {
+      "dataset_name": "banknote-authentication",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 10093
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 10101
+    },
+    {
+      "dataset_name": "volcanoes-a1",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 10103
+    },
+    {
+      "dataset_name": "artificial-characters",
+      "n_classes": 10,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 14963
+    },
+    {
+      "dataset_name": "breast-cancer-dropped-missing-attributes-values",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 52945
+    },
+    {
+      "dataset_name": "thoracic_surgery",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 145679
+    },
+    {
+      "dataset_name": "Agrawal1",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 146093
+    },
+    {
+      "dataset_name": "Stagger1",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 146094
+    },
+    {
+      "dataset_name": "Stagger2",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 146095
+    },
+    {
+      "dataset_name": "Stagger3",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 146096
+    },
+    {
+      "dataset_name": "led7",
+      "n_classes": 10,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 146205
+    },
+    {
+      "dataset_name": "mofn-3-7-10",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 146207
+    },
+    {
+      "dataset_name": "thyroid-new",
+      "n_classes": 3,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 146209
+    },
+    {
+      "dataset_name": "solar-flare",
+      "n_classes": 5,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 146213
+    },
+    {
+      "dataset_name": "threeOf9",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 146216
+    },
+    {
+      "dataset_name": "xd6",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 146219
+    },
+    {
+      "dataset_name": "cars1",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 146226
+    },
+    {
+      "dataset_name": "Titanic",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 146230
+    },
+    {
+      "dataset_name": "parity5_plus_5",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 146232
+    },
+    {
+      "dataset_name": "cleve",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 146236
+    },
+    {
+      "dataset_name": "cleveland-nominal",
+      "n_classes": 5,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 146237
+    },
+    {
+      "dataset_name": "Run_or_walk_information",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 146688
+    },
+    {
+      "dataset_name": "Australian",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 146818
+    },
+    {
+      "dataset_name": "wilt",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 146820
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 167119
+    },
+    {
+      "dataset_name": "DRSongsLyrics",
+      "n_classes": 2,
+      "n_features": 1,
+      "n_rows": 200,
+      "task_id": 168861
+    },
+    {
+      "dataset_name": "airlines",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 189354
+    },
+    {
+      "dataset_name": "FOREX_eurusd-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 190134
+    },
+    {
+      "dataset_name": "ilpd-numeric",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 190140
+    },
+    {
+      "dataset_name": "regime_alimentaire",
+      "n_classes": 2,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 190403
+    },
+    {
+      "dataset_name": "compas-two-years",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 190424
+    },
+    {
+      "dataset_name": "FOREX_usdchf-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 211977
+    },
+    {
+      "dataset_name": "Touch2",
+      "n_classes": 8,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 233166
+    },
+    {
+      "dataset_name": "sf-police-incidents",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 359994
+    },
+    {
+      "dataset_name": "FOREX_usddkk-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360665
+    },
+    {
+      "dataset_name": "FOREX_eurchf-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360666
+    },
+    {
+      "dataset_name": "FOREX_audchf-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360667
+    },
+    {
+      "dataset_name": "FOREX_eurhkd-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360668
+    },
+    {
+      "dataset_name": "FOREX_eurusd-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360669
+    },
+    {
+      "dataset_name": "FOREX_eurcad-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360670
+    },
+    {
+      "dataset_name": "FOREX_eurnzd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360671
+    },
+    {
+      "dataset_name": "FOREX_eurpln-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360672
+    },
+    {
+      "dataset_name": "FOREX_eurhuf-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360673
+    },
+    {
+      "dataset_name": "FOREX_eurcad-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360674
+    },
+    {
+      "dataset_name": "FOREX_usdjpy-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360675
+    },
+    {
+      "dataset_name": "FOREX_audjpy-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360676
+    },
+    {
+      "dataset_name": "FOREX_eurjpy-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360677
+    },
+    {
+      "dataset_name": "FOREX_eurusd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360678
+    },
+    {
+      "dataset_name": "FOREX_audcad-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360679
+    },
+    {
+      "dataset_name": "FOREX_usdjpy-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360680
+    },
+    {
+      "dataset_name": "FOREX_cadchf-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360681
+    },
+    {
+      "dataset_name": "FOREX_chfjpy-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360682
+    },
+    {
+      "dataset_name": "FOREX_eurcad-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360683
+    },
+    {
+      "dataset_name": "FOREX_audusd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360684
+    },
+    {
+      "dataset_name": "FOREX_usdcad-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360685
+    },
+    {
+      "dataset_name": "FOREX_cadjpy-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360686
+    },
+    {
+      "dataset_name": "FOREX_chfjpy-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360687
+    },
+    {
+      "dataset_name": "FOREX_usdchf-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360688
+    },
+    {
+      "dataset_name": "FOREX_eursek-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360689
+    },
+    {
+      "dataset_name": "FOREX_usdjpy-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360690
+    },
+    {
+      "dataset_name": "FOREX_eurhkd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360691
+    },
+    {
+      "dataset_name": "FOREX_eurpln-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360692
+    },
+    {
+      "dataset_name": "FOREX_eurcad-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360693
+    },
+    {
+      "dataset_name": "FOREX_eurhuf-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360694
+    },
+    {
+      "dataset_name": "FOREX_audusd-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360695
+    },
+    {
+      "dataset_name": "FOREX_chfsgd-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360696
+    },
+    {
+      "dataset_name": "FOREX_eurhkd-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360697
+    },
+    {
+      "dataset_name": "FOREX_audchf-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360698
+    },
+    {
+      "dataset_name": "FOREX_eurgbp-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360700
+    },
+    {
+      "dataset_name": "FOREX_eurrub-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360702
+    },
+    {
+      "dataset_name": "FOREX_cadchf-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360704
+    },
+    {
+      "dataset_name": "FOREX_usddkk-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360706
+    },
+    {
+      "dataset_name": "FOREX_gbpusd-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360707
+    },
+    {
+      "dataset_name": "FOREX_eurhuf-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360708
+    },
+    {
+      "dataset_name": "FOREX_eurnok-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360709
+    },
+    {
+      "dataset_name": "FOREX_eurjpy-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360710
+    },
+    {
+      "dataset_name": "FOREX_usdcad-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360711
+    },
+    {
+      "dataset_name": "FOREX_eurjpy-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360712
+    },
+    {
+      "dataset_name": "FOREX_audsgd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360714
+    },
+    {
+      "dataset_name": "FOREX_usdchf-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360715
+    },
+    {
+      "dataset_name": "FOREX_eursgd-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360716
+    },
+    {
+      "dataset_name": "FOREX_eurtry-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360717
+    },
+    {
+      "dataset_name": "FOREX_eurhuf-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360718
+    },
+    {
+      "dataset_name": "FOREX_eursek-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360719
+    },
+    {
+      "dataset_name": "FOREX_audsgd-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360720
+    },
+    {
+      "dataset_name": "FOREX_audcad-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360721
+    },
+    {
+      "dataset_name": "FOREX_gbpusd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360722
+    },
+    {
+      "dataset_name": "FOREX_eurtry-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360723
+    },
+    {
+      "dataset_name": "FOREX_eurgbp-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360724
+    },
+    {
+      "dataset_name": "FOREX_cadjpy-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360725
+    },
+    {
+      "dataset_name": "FOREX_eurnok-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360726
+    },
+    {
+      "dataset_name": "FOREX_audcad-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360727
+    },
+    {
+      "dataset_name": "FOREX_audchf-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360730
+    },
+    {
+      "dataset_name": "FOREX_eurtry-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360731
+    },
+    {
+      "dataset_name": "FOREX_eurhuf-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360732
+    },
+    {
+      "dataset_name": "FOREX_usdcad-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360733
+    },
+    {
+      "dataset_name": "FOREX_eurdkk-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360736
+    },
+    {
+      "dataset_name": "FOREX_usdchf-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360738
+    },
+    {
+      "dataset_name": "FOREX_audcad-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360739
+    },
+    {
+      "dataset_name": "FOREX_usdjpy-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360740
+    },
+    {
+      "dataset_name": "FOREX_eurdkk-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360741
+    },
+    {
+      "dataset_name": "FOREX_gbpusd-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360742
+    },
+    {
+      "dataset_name": "FOREX_eurtry-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360743
+    },
+    {
+      "dataset_name": "FOREX_eurgbp-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360744
+    },
+    {
+      "dataset_name": "FOREX_eurpln-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360745
+    },
+    {
+      "dataset_name": "FOREX_audnzd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360746
+    },
+    {
+      "dataset_name": "FOREX_eurnzd-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360747
+    },
+    {
+      "dataset_name": "FOREX_cadjpy-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360748
+    },
+    {
+      "dataset_name": "FOREX_eurusd-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360749
+    },
+    {
+      "dataset_name": "FOREX_usdchf-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360750
+    },
+    {
+      "dataset_name": "FOREX_eurjpy-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360751
+    },
+    {
+      "dataset_name": "FOREX_eurrub-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360754
+    },
+    {
+      "dataset_name": "FOREX_usdjpy-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360755
+    },
+    {
+      "dataset_name": "FOREX_usdcad-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360756
+    },
+    {
+      "dataset_name": "FOREX_eurhkd-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360757
+    },
+    {
+      "dataset_name": "FOREX_cadjpy-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360758
+    },
+    {
+      "dataset_name": "FOREX_eursgd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360759
+    },
+    {
+      "dataset_name": "FOREX_audcad-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360760
+    },
+    {
+      "dataset_name": "FOREX_eurchf-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360761
+    },
+    {
+      "dataset_name": "FOREX_audjpy-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360764
+    },
+    {
+      "dataset_name": "FOREX_nzdusd-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360765
+    },
+    {
+      "dataset_name": "FOREX_eurgbp-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360766
+    },
+    {
+      "dataset_name": "FOREX_audusd-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360767
+    },
+    {
+      "dataset_name": "FOREX_cadchf-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360769
+    },
+    {
+      "dataset_name": "FOREX_eurnok-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360770
+    },
+    {
+      "dataset_name": "FOREX_audsgd-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360771
+    },
+    {
+      "dataset_name": "FOREX_euraud-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360772
+    },
+    {
+      "dataset_name": "FOREX_eurrub-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360773
+    },
+    {
+      "dataset_name": "FOREX_audusd-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360775
+    },
+    {
+      "dataset_name": "FOREX_chfsgd-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360778
+    },
+    {
+      "dataset_name": "FOREX_eurpln-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360779
+    },
+    {
+      "dataset_name": "FOREX_eurcad-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360781
+    },
+    {
+      "dataset_name": "FOREX_eurnzd-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360784
+    },
+    {
+      "dataset_name": "FOREX_euraud-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360785
+    },
+    {
+      "dataset_name": "FOREX_nzdusd-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360787
+    },
+    {
+      "dataset_name": "FOREX_nzdusd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360788
+    },
+    {
+      "dataset_name": "FOREX_nzdusd-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360790
+    },
+    {
+      "dataset_name": "FOREX_euraud-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360793
+    },
+    {
+      "dataset_name": "FOREX_cadjpy-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360797
+    },
+    {
+      "dataset_name": "FOREX_eurnok-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360798
+    },
+    {
+      "dataset_name": "FOREX_chfsgd-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360799
+    },
+    {
+      "dataset_name": "FOREX_eurchf-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360800
+    },
+    {
+      "dataset_name": "FOREX_audusd-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360801
+    },
+    {
+      "dataset_name": "FOREX_eurgbp-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360802
+    },
+    {
+      "dataset_name": "FOREX_eursek-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360804
+    },
+    {
+      "dataset_name": "FOREX_chfjpy-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360806
+    },
+    {
+      "dataset_name": "FOREX_eursek-minute-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360808
+    },
+    {
+      "dataset_name": "FOREX_usdjpy-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360809
+    },
+    {
+      "dataset_name": "FOREX_eurnzd-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360811
+    },
+    {
+      "dataset_name": "FOREX_audcad-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360812
+    },
+    {
+      "dataset_name": "FOREX_audjpy-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360815
+    },
+    {
+      "dataset_name": "FOREX_usdchf-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360816
+    },
+    {
+      "dataset_name": "FOREX_eurrub-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360819
+    },
+    {
+      "dataset_name": "FOREX_chfsgd-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360821
+    },
+    {
+      "dataset_name": "FOREX_audsgd-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360822
+    },
+    {
+      "dataset_name": "FOREX_euraud-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360823
+    },
+    {
+      "dataset_name": "FOREX_audnzd-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360824
+    },
+    {
+      "dataset_name": "FOREX_eurpln-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360825
+    },
+    {
+      "dataset_name": "FOREX_eursgd-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360826
+    },
+    {
+      "dataset_name": "FOREX_eursgd-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360831
+    },
+    {
+      "dataset_name": "FOREX_audchf-day-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360832
+    },
+    {
+      "dataset_name": "FOREX_eurdkk-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360833
+    },
+    {
+      "dataset_name": "FOREX_audusd-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360835
+    },
+    {
+      "dataset_name": "FOREX_nzdusd-hour-High",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360841
+    },
+    {
+      "dataset_name": "FOREX_eurjpy-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360846
+    },
+    {
+      "dataset_name": "FOREX_eurcad-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360848
+    },
+    {
+      "dataset_name": "FOREX_eurchf-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360851
+    },
+    {
+      "dataset_name": "FOREX_eurhuf-minute-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360852
+    },
+    {
+      "dataset_name": "FOREX_eursek-hour-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360853
+    },
+    {
+      "dataset_name": "FOREX_usddkk-day-Close",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 360854
+    },
+    {
+      "dataset_name": "penguins",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 360913
+    },
+    {
+      "dataset_name": "art_daily_nojump4",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 360930
+    },
+    {
+      "dataset_name": "StackOverflow-polarity-test",
+      "n_classes": 3,
+      "n_features": 1,
+      "n_rows": 200,
+      "task_id": 360981
+    },
+    {
+      "dataset_name": "law-school-admission-bianry",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 361018
+    },
+    {
+      "dataset_name": "national-longitudinal-survey-binary",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 361020
+    },
+    {
+      "dataset_name": "covertype",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 361044
+    },
+    {
+      "dataset_name": "credit",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 361055
+    },
+    {
+      "dataset_name": "california",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 361056
+    },
+    {
+      "dataset_name": "wine",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 361057
+    },
+    {
+      "dataset_name": "credit-approval_reproduced",
+      "n_classes": 2,
+      "n_features": 15,
+      "n_rows": 200,
+      "task_id": 361107
+    },
+    {
+      "dataset_name": "rl",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 361114
+    },
+    {
+      "dataset_name": "compass",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 361116
+    },
+    {
+      "dataset_name": "Diabetes130US",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 361273
+    },
+    {
+      "dataset_name": "BitcoinHeist_Ransomware",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 361284
+    },
+    {
+      "dataset_name": "online_shoppers",
+      "n_classes": 2,
+      "n_features": 17,
+      "n_rows": 200,
+      "task_id": 361302
+    },
+    {
+      "dataset_name": "okcupid_stem",
+      "n_classes": 3,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 361309
+    },
+    {
+      "dataset_name": "Tour-and-Travels-Customer-Churn-Prediction",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 361650
+    },
+    {
+      "dataset_name": "Click",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 361659
+    },
+    {
+      "dataset_name": "Mammographic-Mass-Data-Set",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 361660
+    },
+    {
+      "dataset_name": "simulated_adult",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 361946
+    },
+    {
+      "dataset_name": "simulated_electricity",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 361950
+    },
+    {
+      "dataset_name": "simulated_covertype",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 361966
+    },
+    {
+      "dataset_name": "doa_bwin",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 361983
+    },
+    {
+      "dataset_name": "doa_bwin_balanced",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 361984
+    },
+    {
+      "dataset_name": "bwin_amlb",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 361988
+    },
+    {
+      "dataset_name": "blastchar",
+      "n_classes": 2,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 362082
+    },
+    {
+      "dataset_name": "algerian_forest_fires",
+      "n_classes": 2,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 362083
+    },
+    {
+      "dataset_name": "Pulsar-Dataset-HTRU2",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362099
+    },
+    {
+      "dataset_name": "online-shoppers-intention",
+      "n_classes": 2,
+      "n_features": 17,
+      "n_rows": 200,
+      "task_id": 362100
+    },
+    {
+      "dataset_name": "electrical_grid_stability_simulated_classification",
+      "n_classes": 2,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 362103
+    },
+    {
+      "dataset_name": "glass_clean",
+      "n_classes": 6,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362122
+    },
+    {
+      "dataset_name": "Risk_Level_Classification",
+      "n_classes": 3,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 362162
+    },
+    {
+      "dataset_name": "company_quality_and_valuation_finance",
+      "n_classes": 6,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362178
+    },
+    {
+      "dataset_name": "Apple_Stock_Price_Trends_(2014-2023)",
+      "n_classes": 3,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 362202
+    },
+    {
+      "dataset_name": "Give-Me-Some-Credit",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362204
+    },
+    {
+      "dataset_name": "Give-Me-Some-Credit-Sampled",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362235
+    },
+    {
+      "dataset_name": "total_score",
+      "n_classes": 4,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362254
+    },
+    {
+      "dataset_name": "Give-Me-Some-Credit-Sampled-Preprocessed",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362263
+    },
+    {
+      "dataset_name": "dataset_credit",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362275
+    },
+    {
+      "dataset_name": "dataset_credit-approval",
+      "n_classes": 2,
+      "n_features": 15,
+      "n_rows": 200,
+      "task_id": 362277
+    },
+    {
+      "dataset_name": "Loan_Status",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 362282
+    },
+    {
+      "dataset_name": "Loan_Approval_Status",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 362288
+    },
+    {
+      "dataset_name": "dgf_test",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362306
+    },
+    {
+      "dataset_name": "students_scores",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362333
+    },
+    {
+      "dataset_name": "1StudentPerfromance",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362345
+    },
+    {
+      "dataset_name": "Medical-Appointment-No-Shows",
+      "n_classes": 2,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 362362
+    },
+    {
+      "dataset_name": "Census-(Augmented)",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362373
+    },
+    {
+      "dataset_name": "Employee-Turnover-at-TECHCO",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362375
+    },
+    {
+      "dataset_name": "car_evaluation",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362412
+    },
+    {
+      "dataset_name": "vehicle_reproduced",
+      "n_classes": 4,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 362541
+    },
+    {
+      "dataset_name": "Heart_disease_prediction_20",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 362542
+    },
+    {
+      "dataset_name": "NewspaperChurn",
+      "n_classes": 2,
+      "n_features": 17,
+      "n_rows": 200,
+      "task_id": 362562
+    },
+    {
+      "dataset_name": "South_Asian_Churn_dataset",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 362563
+    },
+    {
+      "dataset_name": "Bank_marketing_data_set_UCI",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362572
+    },
+    {
+      "dataset_name": "credit_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362591
+    },
+    {
+      "dataset_name": "credit_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362594
+    },
+    {
+      "dataset_name": "credit_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362595
+    },
+    {
+      "dataset_name": "credit_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362596
+    },
+    {
+      "dataset_name": "credit_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362597
+    },
+    {
+      "dataset_name": "california_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362607
+    },
+    {
+      "dataset_name": "california_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362608
+    },
+    {
+      "dataset_name": "california_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362609
+    },
+    {
+      "dataset_name": "california_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362610
+    },
+    {
+      "dataset_name": "california_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 362611
+    },
+    {
+      "dataset_name": "wine_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362612
+    },
+    {
+      "dataset_name": "wine_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362613
+    },
+    {
+      "dataset_name": "wine_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362614
+    },
+    {
+      "dataset_name": "wine_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362615
+    },
+    {
+      "dataset_name": "wine_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362616
+    },
+    {
+      "dataset_name": "electricity_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362617
+    },
+    {
+      "dataset_name": "electricity_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362618
+    },
+    {
+      "dataset_name": "electricity_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362619
+    },
+    {
+      "dataset_name": "electricity_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362620
+    },
+    {
+      "dataset_name": "electricity_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362621
+    },
+    {
+      "dataset_name": "covertype_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362622
+    },
+    {
+      "dataset_name": "covertype_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362623
+    },
+    {
+      "dataset_name": "covertype_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362624
+    },
+    {
+      "dataset_name": "covertype_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362625
+    },
+    {
+      "dataset_name": "covertype_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362626
+    },
+    {
+      "dataset_name": "house_16H_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362632
+    },
+    {
+      "dataset_name": "house_16H_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362633
+    },
+    {
+      "dataset_name": "house_16H_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362634
+    },
+    {
+      "dataset_name": "house_16H_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362635
+    },
+    {
+      "dataset_name": "house_16H_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362636
+    },
+    {
+      "dataset_name": "MagicTelescope_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362642
+    },
+    {
+      "dataset_name": "MagicTelescope_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362643
+    },
+    {
+      "dataset_name": "MagicTelescope_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362644
+    },
+    {
+      "dataset_name": "MagicTelescope_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362645
+    },
+    {
+      "dataset_name": "MagicTelescope_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 362646
+    },
+    {
+      "dataset_name": "bank-marketing_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362647
+    },
+    {
+      "dataset_name": "bank-marketing_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362648
+    },
+    {
+      "dataset_name": "bank-marketing_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362649
+    },
+    {
+      "dataset_name": "bank-marketing_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362650
+    },
+    {
+      "dataset_name": "bank-marketing_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362651
+    },
+    {
+      "dataset_name": "phoneme_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362652
+    },
+    {
+      "dataset_name": "phoneme_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362653
+    },
+    {
+      "dataset_name": "phoneme_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362654
+    },
+    {
+      "dataset_name": "phoneme_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362655
+    },
+    {
+      "dataset_name": "phoneme_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362656
+    },
+    {
+      "dataset_name": "rl_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362693
+    },
+    {
+      "dataset_name": "rl_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362694
+    },
+    {
+      "dataset_name": "rl_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362695
+    },
+    {
+      "dataset_name": "rl_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362696
+    },
+    {
+      "dataset_name": "rl_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 362697
+    },
+    {
+      "dataset_name": "compass_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362703
+    },
+    {
+      "dataset_name": "compass_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362704
+    },
+    {
+      "dataset_name": "compass_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362705
+    },
+    {
+      "dataset_name": "compass_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362706
+    },
+    {
+      "dataset_name": "compass_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362707
+    },
+    {
+      "dataset_name": "Australian_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362727
+    },
+    {
+      "dataset_name": "Australian_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362729
+    },
+    {
+      "dataset_name": "Australian_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362730
+    },
+    {
+      "dataset_name": "Australian_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362731
+    },
+    {
+      "dataset_name": "wilt_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362732
+    },
+    {
+      "dataset_name": "Australian_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362733
+    },
+    {
+      "dataset_name": "wilt_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362734
+    },
+    {
+      "dataset_name": "wilt_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362735
+    },
+    {
+      "dataset_name": "wilt_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362736
+    },
+    {
+      "dataset_name": "wilt_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 362737
+    },
+    {
+      "dataset_name": "airlines_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362772
+    },
+    {
+      "dataset_name": "airlines_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362774
+    },
+    {
+      "dataset_name": "airlines_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362775
+    },
+    {
+      "dataset_name": "airlines_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362776
+    },
+    {
+      "dataset_name": "airlines_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 362777
+    },
+    {
+      "dataset_name": "vehicle_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 362792
+    },
+    {
+      "dataset_name": "vehicle_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 362794
+    },
+    {
+      "dataset_name": "vehicle_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 362795
+    },
+    {
+      "dataset_name": "vehicle_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 362796
+    },
+    {
+      "dataset_name": "vehicle_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 362797
+    },
+    {
+      "dataset_name": "eucalyptus_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 5,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 362829
+    },
+    {
+      "dataset_name": "eucalyptus_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 5,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 362830
+    },
+    {
+      "dataset_name": "eucalyptus_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 5,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 362831
+    },
+    {
+      "dataset_name": "eucalyptus_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 5,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 362833
+    },
+    {
+      "dataset_name": "eucalyptus_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 5,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 362835
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362837
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362839
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362840
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362841
+    },
+    {
+      "dataset_name": "blood-transfusion-service-center_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 362842
+    },
+    {
+      "dataset_name": "cmc_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362858
+    },
+    {
+      "dataset_name": "cmc_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362859
+    },
+    {
+      "dataset_name": "cmc_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362860
+    },
+    {
+      "dataset_name": "cmc_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362861
+    },
+    {
+      "dataset_name": "cmc_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362862
+    },
+    {
+      "dataset_name": "car_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362863
+    },
+    {
+      "dataset_name": "car_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362864
+    },
+    {
+      "dataset_name": "car_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362865
+    },
+    {
+      "dataset_name": "car_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362866
+    },
+    {
+      "dataset_name": "car_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 4,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362868
+    },
+    {
+      "dataset_name": "segment_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 7,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362878
+    },
+    {
+      "dataset_name": "segment_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 7,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362879
+    },
+    {
+      "dataset_name": "segment_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 7,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362880
+    },
+    {
+      "dataset_name": "segment_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 7,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362881
+    },
+    {
+      "dataset_name": "segment_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 7,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 362882
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362953
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362954
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362955
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362956
+    },
+    {
+      "dataset_name": "Amazon_employee_access_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 362957
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362963
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362964
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362965
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362966
+    },
+    {
+      "dataset_name": "jungle_chess_2pcs_raw_endgame_complete_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 362967
+    },
+    {
+      "dataset_name": "adult_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362968
+    },
+    {
+      "dataset_name": "adult_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362969
+    },
+    {
+      "dataset_name": "adult_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362970
+    },
+    {
+      "dataset_name": "adult_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362971
+    },
+    {
+      "dataset_name": "adult_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 362973
+    },
+    {
+      "dataset_name": "Click_prediction_small_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363011
+    },
+    {
+      "dataset_name": "Click_prediction_small_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363012
+    },
+    {
+      "dataset_name": "Click_prediction_small_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363013
+    },
+    {
+      "dataset_name": "Click_prediction_small_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363014
+    },
+    {
+      "dataset_name": "Click_prediction_small_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363017
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_0_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363018
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_1_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363019
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_2_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363020
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_3_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363024
+    },
+    {
+      "dataset_name": "sf-police-incidents_seed_4_nrows_2000_nclasses_10_ncols_100_stratify_True",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363025
+    },
+    {
+      "dataset_name": "adult-test",
+      "n_classes": 2,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 363055
+    },
+    {
+      "dataset_name": "AfriSenti",
+      "n_classes": 3,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363087
+    },
+    {
+      "dataset_name": "dummy",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363108
+    },
+    {
+      "dataset_name": "PriceRunner",
+      "n_classes": 10,
+      "n_features": 5,
+      "n_rows": 200,
+      "task_id": 363131
+    },
+    {
+      "dataset_name": "TestDatasetOfLocations",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363137
+    },
+    {
+      "dataset_name": "StudentsPerformance",
+      "n_classes": 2,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 363140
+    },
+    {
+      "dataset_name": "Test_Dataset",
+      "n_classes": 2,
+      "n_features": 2,
+      "n_rows": 200,
+      "task_id": 363142
+    },
+    {
+      "dataset_name": "Products",
+      "n_classes": 5,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363143
+    },
+    {
+      "dataset_name": "132",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363144
+    },
+    {
+      "dataset_name": "Flare",
+      "n_classes": 6,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363230
+    },
+    {
+      "dataset_name": "Loan_Approval_Status_Classification",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 363292
+    },
+    {
+      "dataset_name": "California-Housing-Classification",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363322
+    },
+    {
+      "dataset_name": "Cardiovascular-Disease-dataset",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363323
+    },
+    {
+      "dataset_name": "telco-customer-churn",
+      "n_classes": 2,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 363339
+    },
+    {
+      "dataset_name": "news_channel",
+      "n_classes": 6,
+      "n_features": 17,
+      "n_rows": 200,
+      "task_id": 363365
+    },
+    {
+      "dataset_name": "WBCAtt",
+      "n_classes": 5,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363381
+    },
+    {
+      "dataset_name": "HolisticBias",
+      "n_classes": 4,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 363384
+    },
+    {
+      "dataset_name": "HCV_data",
+      "n_classes": 5,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 363401
+    },
+    {
+      "dataset_name": "Student_Performance_on_an_Entrance_Examination",
+      "n_classes": 4,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363402
+    },
+    {
+      "dataset_name": "Estimation_of_Obesity_Levels",
+      "n_classes": 7,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 363403
+    },
+    {
+      "dataset_name": "maternal_health_risk",
+      "n_classes": 3,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363405
+    },
+    {
+      "dataset_name": "differentiated_thyroid_cancer_recurrence",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 363410
+    },
+    {
+      "dataset_name": "Mental_Health_Dataset",
+      "n_classes": 5,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 363429
+    },
+    {
+      "dataset_name": "diabetes_risk_prediction_dataset",
+      "n_classes": 2,
+      "n_features": 16,
+      "n_rows": 200,
+      "task_id": 363441
+    },
+    {
+      "dataset_name": "Advanced_IoT_Dataset",
+      "n_classes": 6,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 363446
+    },
+    {
+      "dataset_name": "student_lifestyle_dataset",
+      "n_classes": 3,
+      "n_features": 7,
+      "n_rows": 200,
+      "task_id": 363450
+    },
+    {
+      "dataset_name": "PostPartum_Depression",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 363456
+    },
+    {
+      "dataset_name": "air-quality-and-pollution-assessment",
+      "n_classes": 4,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 363459
+    },
+    {
+      "dataset_name": "football-player-position",
+      "n_classes": 4,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363462
+    },
+    {
+      "dataset_name": "AVIDa-hIL6",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363506
+    },
+    {
+      "dataset_name": "AVIDa-SARS-CoV-2",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363507
+    },
+    {
+      "dataset_name": "ACSIncome",
+      "n_classes": 2,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363508
+    },
+    {
+      "dataset_name": "ACSPublicCoverage",
+      "n_classes": 2,
+      "n_features": 18,
+      "n_rows": 200,
+      "task_id": 363509
+    },
+    {
+      "dataset_name": "product_sentiment_machine_hack",
+      "n_classes": 4,
+      "n_features": 4,
+      "n_rows": 200,
+      "task_id": 363527
+    },
+    {
+      "dataset_name": "kick_starter_funding",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363532
+    },
+    {
+      "dataset_name": "Dynamically-Generated-Hate-Speech-Dataset",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363538
+    },
+    {
+      "dataset_name": "QSAR_Bioconcentration_classification",
+      "n_classes": 3,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 363543
+    },
+    {
+      "dataset_name": "sepsis_survival_minimal_clinical_records",
+      "n_classes": 2,
+      "n_features": 3,
+      "n_rows": 200,
+      "task_id": 363565
+    },
+    {
+      "dataset_name": "student_depression_dataset",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 363584
+    },
+    {
+      "dataset_name": "mental_health_detection",
+      "n_classes": 4,
+      "n_features": 14,
+      "n_rows": 200,
+      "task_id": 363589
+    },
+    {
+      "dataset_name": "Bank_Customer_Churn",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 363619
+    },
+    {
+      "dataset_name": "churn",
+      "n_classes": 2,
+      "n_features": 19,
+      "n_rows": 200,
+      "task_id": 363623
+    },
+    {
+      "dataset_name": "E-CommereShippingData",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 363632
+    },
+    {
+      "dataset_name": "Employee",
+      "n_classes": 2,
+      "n_features": 8,
+      "n_rows": 200,
+      "task_id": 363633
+    },
+    {
+      "dataset_name": "Fitness_Club",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363634
+    },
+    {
+      "dataset_name": "GiveMeSomeCredit",
+      "n_classes": 2,
+      "n_features": 10,
+      "n_rows": 200,
+      "task_id": 363636
+    },
+    {
+      "dataset_name": "HR_Analytics_Job_Change_of_Data_Scientists",
+      "n_classes": 2,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 363642
+    },
+    {
+      "dataset_name": "Is-this-a-good-customer",
+      "n_classes": 2,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 363645
+    },
+    {
+      "dataset_name": "online_shoppers_intention",
+      "n_classes": 2,
+      "n_features": 17,
+      "n_rows": 200,
+      "task_id": 363653
+    },
+    {
+      "dataset_name": "Pumpkin_Seeds",
+      "n_classes": 2,
+      "n_features": 12,
+      "n_rows": 200,
+      "task_id": 363657
+    },
+    {
+      "dataset_name": "SDSS17",
+      "n_classes": 3,
+      "n_features": 11,
+      "n_rows": 200,
+      "task_id": 363661
+    },
+    {
+      "dataset_name": "website_phishing",
+      "n_classes": 3,
+      "n_features": 9,
+      "n_rows": 200,
+      "task_id": 363669
+    },
+    {
+      "dataset_name": "criteo-uplift-balanced",
+      "n_classes": 4,
+      "n_features": 13,
+      "n_rows": 200,
+      "task_id": 363736
+    },
+    {
+      "dataset_name": "Accidents_Prediction_Dataset",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363737
+    },
+    {
+      "dataset_name": "Accidents_Prediction_Dataset_Pipeline",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363739
+    },
+    {
+      "dataset_name": "Accidents_Prediction_Balanced_v3",
+      "n_classes": 2,
+      "n_features": 6,
+      "n_rows": 200,
+      "task_id": 363741
+    }
+  ],
+  "version": 1
+}
