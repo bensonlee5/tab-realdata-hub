@@ -2,19 +2,66 @@ name: test
 
 on:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
   push:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  quality-and-unit:
+  version-policy:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6.2.0
         with:
           python-version: "3.14"
-      - run: uv sync
+      - run: git fetch origin "${{ github.base_ref }}" --depth=1
+      - run: python scripts/check_version_bump.py --base-ref "origin/${{ github.base_ref }}"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14"
+      - run: uv sync --frozen
       - run: uv run ruff check .
-      - run: uv run pytest
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14"
+      - run: uv sync --frozen
+      - run: uv run pytest -q --cov=tab_realdata_hub --cov-report=term-missing
+
+  package-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14"
+      - run: rm -rf dist
+      - run: uv build
+      - run: python -m venv .package-smoke
+      - run: .package-smoke/bin/python -m pip install dist/*.whl
+      - run: .package-smoke/bin/tab-realdata-hub --help
+      - run: .package-smoke/bin/tab-realdata-hub bundle build-openml --help
+      - run: .package-smoke/bin/tab-realdata-hub manifest inspect --help
