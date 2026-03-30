@@ -27,3 +27,4 @@
 - If CLI flags, persisted metadata schema, or dataset artifact contract changes, treat it as a user-facing break and call it out explicitly.
 - For behavior/schema changes under `src/tab_realdata_hub`, bump version in `pyproject.toml` just before merging into main so that the version reflects the latest changes (patch by default; minor for intentionally broad user-facing breaks). Docs/tests-only changes do not require a bump.
 - On every version bump, update `CHANGELOG.md` in the same PR.
+- Publish releases through the repo's GitHub Actions trusted publisher workflow by pushing the corresponding `v*` tag; do not rely on local PyPI credentials as the default path.
