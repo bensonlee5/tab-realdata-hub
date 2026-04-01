@@ -137,7 +137,7 @@ def test_manifest_build_and_inspect_round_trip(tmp_path: Path) -> None:
     assert inspection["persisted_summary"]["total_records"] == 1
 
 
-def test_build_manifest_persists_dagzoo_handoff_v3_provenance(tmp_path: Path) -> None:
+def test_build_manifest_persists_current_dagzoo_handoff_provenance(tmp_path: Path) -> None:
     generated_root = tmp_path / "generated"
     generate_run_id = "a" * 32
     dataset_id = "b" * 32
@@ -158,7 +158,7 @@ def test_build_manifest_persists_dagzoo_handoff_v3_provenance(tmp_path: Path) ->
         json.dumps(
             {
                 "schema_name": dagzoo_handoff_module.DAGZOO_HANDOFF_SCHEMA_NAME,
-                "schema_version": dagzoo_handoff_module.DAGZOO_HANDOFF_SCHEMA_VERSION,
+                "schema_version": 4,
                 "identity": {
                     "source_family": "dagzoo",
                     "generate_run_id": generate_run_id,
@@ -169,9 +169,10 @@ def test_build_manifest_persists_dagzoo_handoff_v3_provenance(tmp_path: Path) ->
                 },
                 "artifacts_relative": {
                     "generated_dir": "generated",
+                    "curated_dir": "curated",
                 },
                 "provenance": {
-                    "target_derivation": "teacher_predictions",
+                    "target_derivation": "tabiclv2_latent_node",
                     "target_relevant_feature_count_range": {"min": 1, "max": 4},
                     "target_relevant_feature_fraction_range": {"min": 0.25, "max": 0.75},
                 },
@@ -190,7 +191,7 @@ def test_build_manifest_persists_dagzoo_handoff_v3_provenance(tmp_path: Path) ->
         dagzoo_handoff_manifest_path=handoff_manifest_path,
     )
     expected_provenance = {
-        "target_derivation": "teacher_predictions",
+        "target_derivation": "tabiclv2_latent_node",
         "target_relevant_feature_count_range": {"min": 1, "max": 4},
         "target_relevant_feature_fraction_range": {"min": 0.25, "max": 0.75},
     }
@@ -199,11 +200,39 @@ def test_build_manifest_persists_dagzoo_handoff_v3_provenance(tmp_path: Path) ->
     assert summary.dagzoo_handoff["provenance"] == expected_provenance
     assert "teacher_conditionals" not in summary.dagzoo_handoff
     assert summary.dagzoo_handoff["generated_dir"] == str(generated_root.resolve())
+    assert summary.dagzoo_handoff["curated_dir"] == str((tmp_path / "curated").resolve())
     assert summary.dagzoo_handoff["handoff_manifest_path"] == str(handoff_manifest_path.resolve())
     assert len(summary.dagzoo_handoff["handoff_manifest_sha256"]) == 64
 
     inspection = manifest_module.inspect_manifest(manifest_path)
     assert inspection["persisted_summary"]["dagzoo_handoff"]["provenance"] == expected_provenance
+
+
+def test_build_manifest_accepts_curated_root_without_embedded_filter_metadata(tmp_path: Path) -> None:
+    curated_root = tmp_path / "curated"
+    _write_dataset(
+        curated_root / "shard_00001_case",
+        metadata={
+            "dataset_id": "c" * 32,
+            "split_groups": {"request_run": "d" * 32},
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+        },
+    )
+
+    manifest_path = tmp_path / "manifest.parquet"
+    summary = manifest_module.build_manifest(
+        [curated_root],
+        manifest_path,
+        filter_policy="accepted_only",
+    )
+    inspection = manifest_module.inspect_manifest(manifest_path)
+
+    assert summary.total_records == 1
+    assert summary.filter_status_counts == {"accepted": 1}
+    assert inspection["persisted_summary"]["filter_policy"] == "accepted_only"
 
 
 def test_load_manifest_datasets_reads_generic_manifest_surface(tmp_path: Path) -> None:
