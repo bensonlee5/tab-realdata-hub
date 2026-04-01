@@ -11,7 +11,7 @@ through this package rather than reimplementing compatibility shims.
 Install from the upstream git tag with:
 
 ```bash
-python -m pip install "tab-realdata-hub @ git+https://github.com/bensonlee5/tab-realdata-hub.git@v0.1.1"
+python -m pip install "tab-realdata-hub @ git+https://github.com/bensonlee5/tab-realdata-hub.git@v0.1.2"
 ```
 
 For repo-local development:

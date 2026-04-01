@@ -16,6 +16,7 @@ import pyarrow.parquet as pq
 
 from .dagzoo_handoff import (
     DagzooGeneratedIdentityAccumulator,
+    DagzooHandoffInfo,
     is_canonical_dagzoo_id,
     load_dagzoo_handoff_info,
     verify_dagzoo_handoff_matches_generated_corpus,
@@ -31,8 +32,11 @@ from .validation import (
 
 MANIFEST_CONTRACT_METADATA_KEY = b"tab_realdata_hub_manifest_contract"
 MANIFEST_SUMMARY_METADATA_KEY = b"tab_foundry_manifest_summary"
-MANIFEST_CONTRACT_VERSION = 1
-MANIFEST_LOGICAL_LAYOUT = "parquet_index+metadata_ndjson"
+MANIFEST_CONTRACT_VERSION = 2
+SUPPORTED_MANIFEST_CONTRACT_VERSIONS = (1, 2)
+MANIFEST_LOGICAL_LAYOUT = "parquet_index+dataset_catalog"
+DATASET_CATALOG_FILENAME = "dataset_catalog.ndjson"
+TEACHER_CONDITIONALS_FILENAME = "teacher_conditionals.parquet"
 MANIFEST_STABLE_INDEX_FIELDS = (
     "dataset_id",
     "dataset_identity_key",
@@ -44,15 +48,15 @@ MANIFEST_STABLE_INDEX_FIELDS = (
     "dataset_index",
     "train_path",
     "test_path",
-    "metadata_path",
-    "metadata_offset_bytes",
-    "metadata_size_bytes",
-    "metadata_sha256",
+    "catalog_path",
+    "catalog_offset_bytes",
+    "catalog_size_bytes",
+    "catalog_sha256",
+    "teacher_conditionals_path",
     "n_train",
     "n_test",
     "n_features",
     "n_classes",
-    "seed",
     "filter_mode",
     "filter_status",
     "filter_accepted",
@@ -150,13 +154,18 @@ def _canonical_dagzoo_dataset_identity_key(
 
 def _resolved_manifest_identity(
     *,
-    metadata: dict[str, Any],
+    record_payload: dict[str, Any],
     root_id: str,
     shard_relpath: str,
     dataset_index: int,
 ) -> tuple[str, str]:
-    canonical_dataset_id = metadata.get("dataset_id")
-    split_groups = metadata.get("split_groups")
+    canonical_dataset_id = record_payload.get("dataset_id")
+    split_groups = record_payload.get("group_ids")
+    if not isinstance(split_groups, dict):
+        metadata = record_payload.get("metadata")
+        split_groups = metadata.get("split_groups") if isinstance(metadata, dict) else None
+        if canonical_dataset_id is None and isinstance(metadata, dict):
+            canonical_dataset_id = metadata.get("dataset_id")
     request_run = split_groups.get("request_run") if isinstance(split_groups, dict) else None
     if is_canonical_dagzoo_id(canonical_dataset_id) and is_canonical_dagzoo_id(request_run):
         dataset_id = str(canonical_dataset_id)
@@ -182,11 +191,18 @@ def _manifest_relative_path(path: Path, *, manifest_dir: Path) -> str:
         return absolute.as_posix()
 
 
-def _infer_task(meta: dict[str, Any]) -> str:
-    config_task = meta.get("config", {}).get("dataset", {}).get("task")
-    if config_task in {"classification", "regression"}:
-        return str(config_task)
-    n_classes = meta.get("n_classes")
+def _infer_task(record_payload: dict[str, Any]) -> str:
+    task = record_payload.get("task")
+    if task in {"classification", "regression"}:
+        return str(task)
+    metadata = record_payload.get("metadata")
+    if isinstance(metadata, dict):
+        config_task = metadata.get("config", {}).get("dataset", {}).get("task")
+        if config_task in {"classification", "regression"}:
+            return str(config_task)
+        n_classes = metadata.get("n_classes")
+        return "classification" if n_classes is not None else "regression"
+    n_classes = record_payload.get("n_classes")
     return "classification" if n_classes is not None else "regression"
 
 
@@ -290,11 +306,11 @@ def _iter_shard_dirs(root: Path) -> list[Path]:
     return shard_dirs
 
 
-def _read_metadata_records(metadata_path: Path) -> list[tuple[int, int, str, dict[str, Any]]]:
-    """Read metadata.ndjson records and include byte offsets for random access."""
+def _read_ndjson_records(path: Path) -> list[tuple[int, int, str, dict[str, Any]]]:
+    """Read NDJSON records and include byte offsets for random access."""
 
     records: list[tuple[int, int, str, dict[str, Any]]] = []
-    with metadata_path.open("rb") as handle:
+    with path.open("rb") as handle:
         while True:
             offset = int(handle.tell())
             line = handle.readline()
@@ -310,14 +326,27 @@ def _read_metadata_records(metadata_path: Path) -> list[tuple[int, int, str, dic
                 payload = json.loads(stripped.decode("utf-8"))
             except Exception as exc:
                 raise RuntimeError(
-                    f"failed to parse NDJSON metadata record in {metadata_path} at byte offset {offset}"
+                    f"failed to parse NDJSON record in {path} at byte offset {offset}"
                 ) from exc
             if not isinstance(payload, dict):
                 raise RuntimeError(
-                    f"metadata record must be a JSON object: path={metadata_path}, offset={offset}"
+                    f"NDJSON record must be a JSON object: path={path}, offset={offset}"
                 )
             records.append((offset, size, sha256(line).hexdigest(), payload))
     return records
+
+
+def _catalog_path_for_shard(shard_dir: Path) -> Path | None:
+    for filename in (DATASET_CATALOG_FILENAME, "metadata.ndjson"):
+        candidate = shard_dir / filename
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _teacher_conditionals_path_for_shard(shard_dir: Path) -> Path | None:
+    candidate = shard_dir / TEACHER_CONDITIONALS_FILENAME
+    return candidate if candidate.exists() else None
 
 
 def _coerce_optional_int(value: Any, *, default: int, context: str) -> int:
@@ -414,52 +443,62 @@ def build_manifest(
     out_path = out_path.expanduser().resolve()
     manifest_dir = out_path.parent
     roots = sorted({root.expanduser().resolve() for root in data_roots})
+    dagzoo_handoff = (
+        None
+        if dagzoo_handoff_manifest_path is None
+        else load_dagzoo_handoff_info(dagzoo_handoff_manifest_path)
+    )
 
     records: list[dict[str, Any]] = []
     discovered_records = 0
     status_counts: Counter[str] = Counter()
     missing_value_status_counts: Counter[str] = Counter()
     excluded_for_missing_values = 0
-    dagzoo_generated_identity = (
-        None if dagzoo_handoff_manifest_path is None else DagzooGeneratedIdentityAccumulator()
-    )
+    dagzoo_generated_identity = None if dagzoo_handoff is None else DagzooGeneratedIdentityAccumulator()
     for root in roots:
         if not root.exists():
             continue
         source_root_id = _root_id(root)
+        root_kind = None
+        if dagzoo_handoff is not None:
+            if root == dagzoo_handoff.generated_dir:
+                root_kind = "generated"
+            elif dagzoo_handoff.curated_dir is not None and root == dagzoo_handoff.curated_dir:
+                root_kind = "curated"
         for shard_dir in _iter_shard_dirs(root):
             train_path = shard_dir / "train.parquet"
             test_path = shard_dir / "test.parquet"
-            metadata_path = shard_dir / "metadata.ndjson"
-            if not (train_path.exists() and test_path.exists() and metadata_path.exists()):
+            catalog_path = _catalog_path_for_shard(shard_dir)
+            if catalog_path is None or not (train_path.exists() and test_path.exists()):
                 continue
+            teacher_conditionals_path = _teacher_conditionals_path_for_shard(shard_dir)
             train_missing_status = _missing_value_status_by_dataset(train_path)
             test_missing_status = _missing_value_status_by_dataset(test_path)
 
             shard_id = _extract_shard_id(shard_dir)
-            for offset, size, record_sha256, record in _read_metadata_records(metadata_path):
+            for offset, size, record_sha256, record in _read_ndjson_records(catalog_path):
                 if "dataset_index" not in record:
                     raise RuntimeError(
-                        f"metadata record missing dataset_index: path={metadata_path}, offset={offset}"
+                        f"catalog record missing dataset_index: path={catalog_path}, offset={offset}"
                     )
                 dataset_index = int(record["dataset_index"])
-                meta_raw = record.get("metadata")
-                if not isinstance(meta_raw, dict):
-                    raise RuntimeError(
-                        "metadata record missing object payload at key 'metadata': "
-                        f"path={metadata_path}, dataset_index={dataset_index}"
-                    )
-                meta = meta_raw
+                meta = record.get("metadata")
+                legacy_metadata = cast(dict[str, Any], meta) if isinstance(meta, dict) else None
                 discovered_records += 1
                 if dagzoo_generated_identity is not None:
-                    dagzoo_generated_identity.add_metadata(
-                        meta,
-                        metadata_path=metadata_path,
+                    dagzoo_generated_identity.add_record(
+                        record,
+                        record_path=catalog_path,
                         dataset_index=dataset_index,
                     )
 
                 source_shard_relpath = _shard_relpath(root, shard_dir)
-                filter_mode, filter_status, filter_accepted = _parse_filter_metadata(meta)
+                if legacy_metadata is not None:
+                    filter_mode, filter_status, filter_accepted = _parse_filter_metadata(legacy_metadata)
+                elif root_kind == "curated":
+                    filter_mode, filter_status, filter_accepted = ("curated", "accepted", True)
+                else:
+                    filter_mode, filter_status, filter_accepted = (None, None, None)
                 status_counts[_status_bucket(filter_status)] += 1
                 if not _is_record_selected(
                     filter_policy=filter_policy,
@@ -474,8 +513,8 @@ def build_manifest(
                     missing_splits.append(test_path.name)
                 if missing_splits:
                     raise RuntimeError(
-                        "metadata dataset_index missing from packed split(s): "
-                        f"shard={shard_dir}, path={metadata_path}, dataset_index={dataset_index}, "
+                        "catalog dataset_index missing from packed split(s): "
+                        f"shard={shard_dir}, path={catalog_path}, dataset_index={dataset_index}, "
                         f"missing_splits={','.join(missing_splits)}"
                     )
                 train_missing_value_status = train_missing_status[dataset_index]
@@ -495,12 +534,29 @@ def build_manifest(
                     continue
 
                 dsid, dataset_identity_key = _resolved_manifest_identity(
-                    metadata=meta,
+                    record_payload=record,
                     root_id=source_root_id,
                     shard_relpath=source_shard_relpath,
                     dataset_index=dataset_index,
                 )
                 split = _stable_split(dataset_identity_key, train_ratio, val_ratio)
+                teacher_summary = (
+                    record.get("teacher_conditionals")
+                    if isinstance(record.get("teacher_conditionals"), dict)
+                    else None
+                )
+                teacher_conditionals_manifest_path = (
+                    _manifest_relative_path(teacher_conditionals_path, manifest_dir=manifest_dir)
+                    if teacher_conditionals_path is not None
+                    and isinstance(teacher_summary, dict)
+                    and teacher_summary.get("available") is True
+                    else None
+                )
+                n_classes_raw = (
+                    record.get("n_classes")
+                    if "n_classes" in record
+                    else (legacy_metadata.get("n_classes") if legacy_metadata is not None else None)
+                )
 
                 records.append(
                     {
@@ -509,29 +565,32 @@ def build_manifest(
                         "source_root_id": source_root_id,
                         "source_shard_relpath": source_shard_relpath,
                         "split": split,
-                        "task": _infer_task(meta),
+                        "task": _infer_task(record),
                         "shard_id": shard_id,
                         "dataset_index": dataset_index,
                         "train_path": _manifest_relative_path(train_path, manifest_dir=manifest_dir),
                         "test_path": _manifest_relative_path(test_path, manifest_dir=manifest_dir),
-                        "metadata_path": _manifest_relative_path(metadata_path, manifest_dir=manifest_dir),
-                        "metadata_offset_bytes": offset,
-                        "metadata_size_bytes": size,
-                        "metadata_sha256": record_sha256,
+                        "catalog_path": _manifest_relative_path(catalog_path, manifest_dir=manifest_dir),
+                        "catalog_offset_bytes": offset,
+                        "catalog_size_bytes": size,
+                        "catalog_sha256": record_sha256,
+                        "teacher_conditionals_path": teacher_conditionals_manifest_path,
                         "n_train": int(record.get("n_train", -1)),
                         "n_test": int(record.get("n_test", -1)),
                         "n_features": _coerce_optional_int(
-                            record.get("n_features", meta.get("n_features", -1)),
+                            record.get(
+                                "n_features",
+                                legacy_metadata.get("n_features", -1)
+                                if legacy_metadata is not None
+                                else -1,
+                            ),
                             default=-1,
                             context=(
-                                f"metadata.n_features path={metadata_path} "
+                                f"catalog.n_features path={catalog_path} "
                                 f"dataset_index={dataset_index}"
                             ),
                         ),
-                        "n_classes": (
-                            int(meta["n_classes"]) if meta.get("n_classes") is not None else None
-                        ),
-                        "seed": int(meta.get("seed", -1)),
+                        "n_classes": int(n_classes_raw) if n_classes_raw is not None else None,
                         "filter_mode": filter_mode,
                         "filter_status": filter_status,
                         "filter_accepted": filter_accepted,
@@ -565,11 +624,11 @@ def build_manifest(
     val_records = sum(1 for record in records if record["split"] == "val")
     test_records = sum(1 for record in records if record["split"] == "test")
     excluded_records = discovered_records - len(records)
-    dagzoo_handoff = (
+    dagzoo_handoff_summary = (
         None
-        if dagzoo_handoff_manifest_path is None
+        if dagzoo_handoff is None
         else _verified_dagzoo_handoff_summary(
-            dagzoo_handoff_manifest_path=dagzoo_handoff_manifest_path,
+            handoff=dagzoo_handoff,
             dagzoo_generated_identity=dagzoo_generated_identity,
         )
     )
@@ -594,7 +653,7 @@ def build_manifest(
             excluded_for_missing_values=excluded_for_missing_values,
             filter_status_counts=status_counts,
         ),
-        dagzoo_handoff=dagzoo_handoff,
+        dagzoo_handoff=dagzoo_handoff_summary,
     )
     table = pa.Table.from_pylist(records).replace_schema_metadata(
         _manifest_schema_metadata(summary=summary)
@@ -605,12 +664,11 @@ def build_manifest(
 
 def _verified_dagzoo_handoff_summary(
     *,
-    dagzoo_handoff_manifest_path: Path,
+    handoff: DagzooHandoffInfo,
     dagzoo_generated_identity: DagzooGeneratedIdentityAccumulator | None,
 ) -> dict[str, Any]:
     if dagzoo_generated_identity is None:
         raise RuntimeError("dagzoo handoff verification state was not initialized")
-    handoff = load_dagzoo_handoff_info(dagzoo_handoff_manifest_path)
     verify_dagzoo_handoff_matches_generated_corpus(
         handoff,
         scanned_identity=dagzoo_generated_identity,
@@ -664,10 +722,10 @@ def _require_manifest_contract(manifest_path: Path) -> dict[str, Any]:
     raw_version = payload.get("version")
     if not isinstance(raw_version, int):
         raise RuntimeError(f"manifest contract version must be an int: {manifest_path}")
-    if int(raw_version) != int(MANIFEST_CONTRACT_VERSION):
+    if int(raw_version) not in SUPPORTED_MANIFEST_CONTRACT_VERSIONS:
         raise RuntimeError(
             "manifest contract version mismatch: "
-            f"expected={MANIFEST_CONTRACT_VERSION}, actual={raw_version}, path={manifest_path}"
+            f"supported={SUPPORTED_MANIFEST_CONTRACT_VERSIONS}, actual={raw_version}, path={manifest_path}"
         )
     return payload
 
@@ -734,39 +792,107 @@ def _read_packed_split(
 
 
 def _read_ndjson_record_by_offset(
-    metadata_path: Path,
+    ndjson_path: Path,
     *,
     offset_bytes: int,
     size_bytes: int,
     expected_sha256: str,
 ) -> dict[str, Any]:
-    with metadata_path.open("rb") as handle:
+    with ndjson_path.open("rb") as handle:
         handle.seek(offset_bytes)
         raw = handle.read(size_bytes)
     if len(raw) != size_bytes:
         raise RuntimeError(
-            "failed to read full metadata slice from NDJSON: "
-            f"path={metadata_path}, offset={offset_bytes}, size={size_bytes}, got={len(raw)}"
+            "failed to read full NDJSON slice: "
+            f"path={ndjson_path}, offset={offset_bytes}, size={size_bytes}, got={len(raw)}"
         )
     actual_sha256 = sha256(raw).hexdigest()
     if actual_sha256 != expected_sha256:
         raise RuntimeError(
-            "metadata NDJSON checksum mismatch: "
-            f"path={metadata_path}, offset={offset_bytes}, size={size_bytes}, "
+            "NDJSON checksum mismatch: "
+            f"path={ndjson_path}, offset={offset_bytes}, size={size_bytes}, "
             f"expected={expected_sha256}, actual={actual_sha256}"
         )
     try:
         payload = json.loads(raw.decode("utf-8"))
     except Exception as exc:  # pragma: no cover - defensive parse context
         raise RuntimeError(
-            "failed to parse metadata NDJSON record: "
-            f"path={metadata_path}, offset={offset_bytes}, size={size_bytes}"
+            "failed to parse NDJSON record: "
+            f"path={ndjson_path}, offset={offset_bytes}, size={size_bytes}"
         ) from exc
     if not isinstance(payload, dict):
         raise RuntimeError(
-            f"metadata NDJSON payload must be an object: path={metadata_path}, offset={offset_bytes}"
+            f"NDJSON payload must be an object: path={ndjson_path}, offset={offset_bytes}"
         )
     return payload
+
+
+def _manifest_row_catalog_locator(row: Mapping[str, Any]) -> tuple[str, int, int, str]:
+    if "catalog_path" in row:
+        return (
+            str(row["catalog_path"]),
+            int(row["catalog_offset_bytes"]),
+            int(row["catalog_size_bytes"]),
+            str(row["catalog_sha256"]),
+        )
+    return (
+        str(row["metadata_path"]),
+        int(row["metadata_offset_bytes"]),
+        int(row["metadata_size_bytes"]),
+        str(row["metadata_sha256"]),
+    )
+
+
+def load_manifest_record_catalog(
+    manifest_path: Path,
+    *,
+    record: Mapping[str, Any],
+) -> dict[str, Any]:
+    raw_path, offset_bytes, size_bytes, expected_sha256 = _manifest_row_catalog_locator(record)
+    catalog_path = _resolve_record_path(manifest_path, raw_path)
+    return _read_ndjson_record_by_offset(
+        catalog_path,
+        offset_bytes=offset_bytes,
+        size_bytes=size_bytes,
+        expected_sha256=expected_sha256,
+    )
+
+
+def _teacher_probs_to_matrix(values: list[list[float]]) -> np.ndarray:
+    if not values:
+        return np.empty((0, 0), dtype=np.float32)
+    return np.asarray(values, dtype=np.float32)
+
+
+def load_manifest_record_teacher_conditionals(
+    manifest_path: Path,
+    *,
+    record: Mapping[str, Any],
+) -> np.ndarray | None:
+    raw_path = record.get("teacher_conditionals_path")
+    if raw_path is None:
+        return None
+    teacher_path = _resolve_record_path(manifest_path, str(raw_path))
+    dataset_index = int(record["dataset_index"])
+    try:
+        table = pq.read_table(
+            teacher_path,
+            filters=[("dataset_index", "=", dataset_index)],
+            columns=["row_index", "class_probs"],
+        )
+    except Exception as exc:  # pragma: no cover - pyarrow error typing is backend-specific
+        raise RuntimeError(
+            "failed to read teacher_conditionals parquet: "
+            f"path={teacher_path}, dataset_index={dataset_index}"
+        ) from exc
+    if table.num_rows <= 0:
+        return np.empty((0, 0), dtype=np.float32)
+    row_index = table["row_index"].to_numpy(zero_copy_only=False).astype(np.int64, copy=False)
+    order = np.argsort(row_index, kind="stable")
+    probs = _teacher_probs_to_matrix(table["class_probs"].to_pylist())
+    if not np.array_equal(order, np.arange(order.shape[0])):
+        probs = probs[order]
+    return probs
 
 
 def _dataset_display_name(*, dataset_id: str, metadata: dict[str, Any]) -> str:
@@ -829,19 +955,13 @@ def load_manifest_datasets(
         dataset_index = int(row["dataset_index"])
         train_path = _resolve_record_path(resolved_manifest, str(row["train_path"]))
         test_path = _resolve_record_path(resolved_manifest, str(row["test_path"]))
-        metadata_path = _resolve_record_path(resolved_manifest, str(row["metadata_path"]))
-        metadata_record = _read_ndjson_record_by_offset(
-            metadata_path,
-            offset_bytes=int(row["metadata_offset_bytes"]),
-            size_bytes=int(row["metadata_size_bytes"]),
-            expected_sha256=str(row["metadata_sha256"]),
+        catalog_record = load_manifest_record_catalog(resolved_manifest, record=row)
+        raw_metadata = catalog_record.get("metadata")
+        metadata = (
+            cast(dict[str, Any], raw_metadata)
+            if isinstance(raw_metadata, dict)
+            else cast(dict[str, Any], dict(catalog_record))
         )
-        raw_metadata = metadata_record.get("metadata")
-        if not isinstance(raw_metadata, dict):
-            raise RuntimeError(
-                f"metadata record missing object payload at key 'metadata': path={metadata_path}"
-            )
-        metadata = cast(dict[str, Any], raw_metadata)
         train_row_index, x_train, y_train = _read_packed_split(train_path, dataset_index=dataset_index)
         test_row_index, x_test, y_test = _read_packed_split(test_path, dataset_index=dataset_index)
         x, y, row_order_mode = _combine_dataset_splits(
