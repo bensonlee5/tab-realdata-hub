@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-04-01
+
+### Changed
+
+- User-facing note: dagzoo handoff loading now accepts schema version 4
+  manifests, and manifest builds treat roots named `curated` as accepted
+  curated shards even when legacy filter metadata is missing from the shard
+  payload.
+
 ## [0.1.3] - 2026-03-31
 
 ### Changed
