@@ -32,30 +32,14 @@ jobs:
           git fetch --tags --force
 
           head_version="$(
-            python - <<'PY'
-            from pathlib import Path
-            import tomllib
-
-            print(tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])
-            PY
+            python -c 'from pathlib import Path; import tomllib; print(tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])'
           )"
 
           if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
             base_version=""
           else
             base_version="$(
-              BASE_SHA="$BASE_SHA" python - <<'PY'
-              import os
-              import subprocess
-              import tomllib
-
-              payload = subprocess.run(
-                  ["git", "show", f"{os.environ['BASE_SHA']}:pyproject.toml"],
-                  check=True,
-                  capture_output=True,
-              ).stdout
-              print(tomllib.loads(payload.decode("utf-8"))["project"]["version"])
-              PY
+              BASE_SHA="$BASE_SHA" python -c 'import os, subprocess, tomllib; ref = os.environ["BASE_SHA"] + ":pyproject.toml"; payload = subprocess.run(["git", "show", ref], check=True, capture_output=True).stdout; print(tomllib.loads(payload.decode("utf-8"))["project"]["version"])'
             )"
           fi
 
