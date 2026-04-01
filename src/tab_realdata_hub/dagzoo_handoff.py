@@ -10,7 +10,8 @@ from typing import Any, Mapping, cast
 
 
 DAGZOO_HANDOFF_SCHEMA_NAME = "dagzoo_generate_handoff_manifest"
-DAGZOO_HANDOFF_SCHEMA_VERSION = 1
+SUPPORTED_DAGZOO_HANDOFF_SCHEMA_VERSIONS = (1, 2)
+DAGZOO_HANDOFF_SCHEMA_VERSION = 2
 _DAGZOO_ID_HEX_LENGTH = 32
 _GENERATED_CORPUS_ID_DIGEST_BYTES = 16
 
@@ -36,30 +37,81 @@ class DagzooHandoffInfo:
     generate_run_id: str
     generated_corpus_id: str
     generated_dir: Path
-    recommended_training_corpus: str
-    recommended_training_artifact_key: str
-    curation_policy: str
+    curated_dir: Path | None = None
+    teacher_conditionals: dict[str, Any] | None = None
 
     def to_summary_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "handoff_manifest_path": str(self.handoff_manifest_path),
             "handoff_manifest_sha256": self.handoff_manifest_sha256,
             "source_family": self.source_family,
             "generate_run_id": self.generate_run_id,
             "generated_corpus_id": self.generated_corpus_id,
             "generated_dir": str(self.generated_dir),
-            "recommended_training_corpus": self.recommended_training_corpus,
-            "recommended_training_artifact_key": self.recommended_training_artifact_key,
-            "curation_policy": self.curation_policy,
+            "curated_dir": None if self.curated_dir is None else str(self.curated_dir),
         }
+        if self.teacher_conditionals is not None:
+            payload["teacher_conditionals"] = dict(self.teacher_conditionals)
+        return payload
 
 
 @dataclass(slots=True)
 class DagzooGeneratedIdentityAccumulator:
-    """Scan-time dagzoo identity derived from packed shard metadata."""
+    """Scan-time dagzoo identity derived from shard catalog records."""
 
     generate_run_id: str | None = None
     dataset_ids: list[str] = field(default_factory=list)
+
+    def add_record(
+        self,
+        record: Mapping[str, Any],
+        *,
+        record_path: Path,
+        dataset_index: int,
+    ) -> None:
+        if isinstance(record.get("metadata"), Mapping):
+            metadata = cast(Mapping[str, Any], record["metadata"])
+            group_payload = metadata.get("split_groups")
+            dataset_id_value = metadata.get("dataset_id")
+            request_run_context = "metadata.split_groups.request_run"
+            dataset_id_context = "metadata.dataset_id"
+        else:
+            metadata = record
+            group_payload = record.get("group_ids")
+            dataset_id_value = record.get("dataset_id")
+            request_run_context = "group_ids.request_run"
+            dataset_id_context = "dataset_id"
+
+        if not isinstance(group_payload, Mapping):
+            raise RuntimeError(
+                "dagzoo dataset catalog missing object payload for grouping keys: "
+                f"path={record_path}, dataset_index={dataset_index}"
+            )
+        current_generate_run_id = _require_hex_string_value(
+            group_payload.get("request_run"),
+            context=(
+                "dagzoo dataset identity field must be a "
+                f"{_DAGZOO_ID_HEX_LENGTH}-character lowercase hex string: "
+                f"path={record_path}, dataset_index={dataset_index}, key={request_run_context}"
+            ),
+        )
+        dataset_id = _require_hex_string_value(
+            dataset_id_value,
+            context=(
+                "dagzoo dataset identity field must be a "
+                f"{_DAGZOO_ID_HEX_LENGTH}-character lowercase hex string: "
+                f"path={record_path}, dataset_index={dataset_index}, key={dataset_id_context}"
+            ),
+        )
+        if self.generate_run_id is None:
+            self.generate_run_id = current_generate_run_id
+        elif self.generate_run_id != current_generate_run_id:
+            raise RuntimeError(
+                "dagzoo generated corpus contains multiple request_run identities: "
+                f"path={record_path}, dataset_index={dataset_index}, "
+                f"expected={self.generate_run_id!r}, found={current_generate_run_id!r}"
+            )
+        self.dataset_ids.append(dataset_id)
 
     def add_metadata(
         self,
@@ -68,38 +120,11 @@ class DagzooGeneratedIdentityAccumulator:
         metadata_path: Path,
         dataset_index: int,
     ) -> None:
-        split_groups = metadata.get("split_groups")
-        if not isinstance(split_groups, Mapping):
-            raise RuntimeError(
-                "dagzoo dataset metadata missing object payload at key 'split_groups': "
-                f"path={metadata_path}, dataset_index={dataset_index}"
-            )
-        current_generate_run_id = _require_hex_string_value(
-            split_groups.get("request_run"),
-            context=(
-                "dagzoo dataset metadata field must be a "
-                f"{_DAGZOO_ID_HEX_LENGTH}-character lowercase hex string: "
-                f"path={metadata_path}, dataset_index={dataset_index}, "
-                "key=metadata.split_groups.request_run"
-            ),
+        self.add_record(
+            {"metadata": dict(metadata)},
+            record_path=metadata_path,
+            dataset_index=dataset_index,
         )
-        dataset_id = _require_hex_string_value(
-            metadata.get("dataset_id"),
-            context=(
-                "dagzoo dataset metadata field must be a "
-                f"{_DAGZOO_ID_HEX_LENGTH}-character lowercase hex string: "
-                f"path={metadata_path}, dataset_index={dataset_index}, key=metadata.dataset_id"
-            ),
-        )
-        if self.generate_run_id is None:
-            self.generate_run_id = current_generate_run_id
-        elif self.generate_run_id != current_generate_run_id:
-            raise RuntimeError(
-                "dagzoo generated corpus contains multiple request_run identities: "
-                f"path={metadata_path}, dataset_index={dataset_index}, "
-                f"expected={self.generate_run_id!r}, found={current_generate_run_id!r}"
-            )
-        self.dataset_ids.append(dataset_id)
 
     def generated_corpus_id(self) -> str:
         if self.generate_run_id is None or not self.dataset_ids:
@@ -142,6 +167,20 @@ def _require_mapping(
     return cast(Mapping[str, Any], value)
 
 
+def _require_optional_mapping(
+    payload: Mapping[str, Any],
+    key: str,
+    *,
+    path: Path,
+) -> Mapping[str, Any] | None:
+    value = payload.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, Mapping):
+        raise RuntimeError(f"dagzoo handoff manifest field must be an object: path={path}, key={key}")
+    return cast(Mapping[str, Any], value)
+
+
 def _require_non_empty_string(
     payload: Mapping[str, Any],
     key: str,
@@ -162,19 +201,22 @@ def _require_hex_string_value(value: Any, *, context: str) -> str:
     return value
 
 
-def _require_relative_path(
-    payload: Mapping[str, Any],
-    key: str,
-    *,
-    path: Path,
-) -> str:
-    raw = _require_non_empty_string(payload, key, path=path)
+def _resolve_relative_path(raw: str, *, path: Path, field_key: str) -> Path:
     relative = Path(raw)
     if relative.is_absolute():
         raise RuntimeError(
-            f"dagzoo handoff manifest field must be relative: path={path}, key={key}, value={raw!r}"
+            "dagzoo handoff manifest field must be relative: "
+            f"path={path}, key={field_key}, value={raw!r}"
         )
-    return raw
+    resolved = (path.parent / relative).resolve()
+    try:
+        _ = resolved.relative_to(path.parent)
+    except ValueError as exc:
+        raise RuntimeError(
+            "dagzoo handoff path escapes the handoff root: "
+            f"path={path}, key={field_key}, value={raw!r}"
+        ) from exc
+    return resolved
 
 
 def stable_dagzoo_generated_corpus_id(*, generate_run_id: str, dataset_ids: list[str]) -> str:
@@ -215,6 +257,61 @@ def verify_dagzoo_handoff_matches_generated_corpus(
         )
 
 
+def _teacher_summary_from_v1(
+    payload: Mapping[str, Any],
+    *,
+    path: Path,
+) -> dict[str, Any] | None:
+    provenance = _require_optional_mapping(payload, "provenance", path=path)
+    if provenance is None:
+        return None
+    enabled = provenance.get("teacher_conditional_export")
+    if enabled is not True:
+        return None
+    metric_definition = provenance.get("teacher_conditional_metric_definition")
+    target_split = provenance.get("target_split")
+    if not isinstance(metric_definition, str) or not metric_definition.strip():
+        return None
+    if not isinstance(target_split, str) or not target_split.strip():
+        target_split = "test"
+    return {
+        "enabled": True,
+        "metric_definition": metric_definition,
+        "target_split": target_split,
+    }
+
+
+def _teacher_summary_from_v2(
+    payload: Mapping[str, Any],
+    *,
+    path: Path,
+) -> dict[str, Any] | None:
+    teacher_conditionals = _require_optional_mapping(payload, "teacher_conditionals", path=path)
+    if teacher_conditionals is None:
+        return None
+    enabled = teacher_conditionals.get("enabled")
+    if enabled is not True:
+        raise RuntimeError(
+            "dagzoo handoff teacher_conditionals.enabled must equal true when present: "
+            f"path={path}"
+        )
+    metric_definition = _require_non_empty_string(
+        teacher_conditionals,
+        "metric_definition",
+        path=path,
+    )
+    target_split = _require_non_empty_string(
+        teacher_conditionals,
+        "target_split",
+        path=path,
+    )
+    return {
+        "enabled": True,
+        "metric_definition": metric_definition,
+        "target_split": target_split,
+    }
+
+
 def load_dagzoo_handoff_info(handoff_manifest_path: Path) -> DagzooHandoffInfo:
     """Load and validate the dagzoo handoff subset used by manifest builders."""
 
@@ -230,10 +327,11 @@ def load_dagzoo_handoff_info(handoff_manifest_path: Path) -> DagzooHandoffInfo:
             f"path={path}, value={schema_name!r}, expected={DAGZOO_HANDOFF_SCHEMA_NAME!r}"
         )
     schema_version = payload.get("schema_version")
-    if schema_version != DAGZOO_HANDOFF_SCHEMA_VERSION:
+    if schema_version not in SUPPORTED_DAGZOO_HANDOFF_SCHEMA_VERSIONS:
         raise RuntimeError(
             "Unsupported dagzoo handoff schema_version: "
-            f"path={path}, value={schema_version!r}, expected={DAGZOO_HANDOFF_SCHEMA_VERSION}"
+            f"path={path}, value={schema_version!r}, expected one of "
+            f"{SUPPORTED_DAGZOO_HANDOFF_SCHEMA_VERSIONS}"
         )
 
     identity = _require_mapping(payload, "identity", path=path)
@@ -242,34 +340,38 @@ def load_dagzoo_handoff_info(handoff_manifest_path: Path) -> DagzooHandoffInfo:
     generated_corpus_id = _require_non_empty_string(identity, "generated_corpus_id", path=path)
 
     artifacts_relative = _require_mapping(payload, "artifacts_relative", path=path)
-    run_root = _require_non_empty_string(artifacts_relative, "run_root", path=path)
-    if run_root != ".":
-        raise RuntimeError(
-            "dagzoo handoff artifacts_relative.run_root must equal '.': "
-            f"path={path}, value={run_root!r}"
+    if int(schema_version) == 1:
+        run_root = _require_non_empty_string(artifacts_relative, "run_root", path=path)
+        if run_root != ".":
+            raise RuntimeError(
+                "dagzoo handoff artifacts_relative.run_root must equal '.': "
+                f"path={path}, value={run_root!r}"
+            )
+    generated_dir_rel = _require_non_empty_string(artifacts_relative, "generated_dir", path=path)
+    generated_dir = _resolve_relative_path(
+        generated_dir_rel,
+        path=path,
+        field_key="artifacts_relative.generated_dir",
+    )
+    curated_dir_raw = artifacts_relative.get("curated_dir")
+    curated_dir = None
+    if curated_dir_raw is not None:
+        if not isinstance(curated_dir_raw, str) or not curated_dir_raw.strip():
+            raise RuntimeError(
+                "dagzoo handoff manifest field must be a non-empty string when present: "
+                f"path={path}, key=artifacts_relative.curated_dir"
+            )
+        curated_dir = _resolve_relative_path(
+            curated_dir_raw,
+            path=path,
+            field_key="artifacts_relative.curated_dir",
         )
-    generated_dir_rel = _require_relative_path(artifacts_relative, "generated_dir", path=path)
-    generated_dir = (path.parent / generated_dir_rel).resolve()
-    try:
-        _ = generated_dir.relative_to(path.parent)
-    except ValueError as exc:
-        raise RuntimeError(
-            "dagzoo handoff generated_dir escapes the handoff root: "
-            f"path={path}, value={generated_dir_rel!r}"
-        ) from exc
 
-    defaults = _require_mapping(payload, "defaults", path=path)
-    recommended_training_corpus = _require_non_empty_string(
-        defaults,
-        "recommended_training_corpus",
-        path=path,
+    teacher_conditionals = (
+        _teacher_summary_from_v1(payload, path=path)
+        if int(schema_version) == 1
+        else _teacher_summary_from_v2(payload, path=path)
     )
-    recommended_training_artifact_key = _require_non_empty_string(
-        defaults,
-        "recommended_training_artifact_key",
-        path=path,
-    )
-    curation_policy = _require_non_empty_string(defaults, "curation_policy", path=path)
 
     return DagzooHandoffInfo(
         handoff_manifest_path=path,
@@ -278,7 +380,6 @@ def load_dagzoo_handoff_info(handoff_manifest_path: Path) -> DagzooHandoffInfo:
         generate_run_id=generate_run_id,
         generated_corpus_id=generated_corpus_id,
         generated_dir=generated_dir,
-        recommended_training_corpus=recommended_training_corpus,
-        recommended_training_artifact_key=recommended_training_artifact_key,
-        curation_policy=curation_policy,
+        curated_dir=curated_dir,
+        teacher_conditionals=teacher_conditionals,
     )

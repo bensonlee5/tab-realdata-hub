@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-03-31
+
+### Changed
+
+- User-facing note: the manifest contract now writes v2 parquet indexes that
+  point at shard-level `dataset_catalog.ndjson` records via `catalog_*`
+  locator columns, optionally expose `teacher_conditionals.parquet`, and
+  continue reading older v1 manifests that still use `metadata.ndjson`.
+- User-facing note: dagzoo handoff loading now accepts schema versions 1 and 2;
+  v2 handoffs can describe an optional curated root and summarize teacher
+  conditionals alongside the generated corpus identity.
+- User-facing note: manifest builds now resolve dataset identity and task
+  metadata from either the new catalog layout or legacy metadata payloads, and
+  curated dagzoo shards default to accepted filter status when legacy filter
+  annotations are absent.
+
 ## [0.1.1] - 2026-03-29
 
 ### Changed
