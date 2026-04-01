@@ -465,6 +465,8 @@ def build_manifest(
                 root_kind = "generated"
             elif dagzoo_handoff.curated_dir is not None and root == dagzoo_handoff.curated_dir:
                 root_kind = "curated"
+        elif root.name == "curated":
+            root_kind = "curated"
         for shard_dir in _iter_shard_dirs(root):
             train_path = shard_dir / "train.parquet"
             test_path = shard_dir / "test.parquet"
@@ -495,6 +497,12 @@ def build_manifest(
                 source_shard_relpath = _shard_relpath(root, shard_dir)
                 if legacy_metadata is not None:
                     filter_mode, filter_status, filter_accepted = _parse_filter_metadata(legacy_metadata)
+                    if (
+                        root_kind == "curated"
+                        and filter_status is None
+                        and filter_accepted is None
+                    ):
+                        filter_mode, filter_status, filter_accepted = ("curated", "accepted", True)
                 elif root_kind == "curated":
                     filter_mode, filter_status, filter_accepted = ("curated", "accepted", True)
                 else:
