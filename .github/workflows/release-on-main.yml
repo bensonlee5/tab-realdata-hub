@@ -1,0 +1,135 @@
+name: release-on-main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - pyproject.toml
+      - CHANGELOG.md
+      - .github/workflows/release-on-main.yml
+      - .github/workflows/publish.yml
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release metadata
+        id: release
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+
+          head_version="$(
+            python - <<'PY'
+            from pathlib import Path
+            import tomllib
+
+            print(tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])
+            PY
+          )"
+
+          if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            base_version=""
+          else
+            base_version="$(
+              BASE_SHA="$BASE_SHA" python - <<'PY'
+              import os
+              import subprocess
+              import tomllib
+
+              payload = subprocess.run(
+                  ["git", "show", f"{os.environ['BASE_SHA']}:pyproject.toml"],
+                  check=True,
+                  capture_output=True,
+              ).stdout
+              print(tomllib.loads(payload.decode("utf-8"))["project"]["version"])
+              PY
+            )"
+          fi
+
+          tag="v${head_version}"
+          version_changed=false
+          if [ "$base_version" != "$head_version" ]; then
+            version_changed=true
+          fi
+
+          changelog_present=false
+          if grep -q "^## \\[$head_version\\]" CHANGELOG.md; then
+            changelog_present=true
+          fi
+
+          tag_exists=false
+          tag_matches_head=false
+          tag_sha=""
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            tag_exists=true
+            tag_sha="$(git rev-list -n1 "${tag}")"
+            if [ "$tag_sha" = "$HEAD_SHA" ]; then
+              tag_matches_head=true
+            fi
+          fi
+
+          should_release=false
+          if [ "$version_changed" = true ] || [ "$tag_matches_head" = true ]; then
+            should_release=true
+          fi
+
+          {
+            echo "version=${head_version}"
+            echo "tag=${tag}"
+            echo "base_version=${base_version}"
+            echo "version_changed=${version_changed}"
+            echo "changelog_present=${changelog_present}"
+            echo "tag_exists=${tag_exists}"
+            echo "tag_matches_head=${tag_matches_head}"
+            echo "tag_sha=${tag_sha}"
+            echo "should_release=${should_release}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Reject mismatched existing tag
+        if: steps.release.outputs.tag_exists == 'true' && steps.release.outputs.tag_matches_head != 'true'
+        run: |
+          echo "release-on-main: ${{ steps.release.outputs.tag }} already exists on ${{ steps.release.outputs.tag_sha }}, not ${{ github.sha }}" >&2
+          exit 1
+
+      - name: Skip when no release is needed
+        if: steps.release.outputs.should_release != 'true'
+        run: |
+          echo "release-on-main: pyproject version did not change on this push; skipping"
+
+      - name: Require changelog entry
+        if: steps.release.outputs.should_release == 'true' && steps.release.outputs.changelog_present != 'true'
+        run: |
+          echo "release-on-main: CHANGELOG.md is missing an entry for ${{ steps.release.outputs.version }}" >&2
+          exit 1
+
+      - name: Create release tag
+        if: steps.release.outputs.should_release == 'true' && steps.release.outputs.tag_exists != 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.release.outputs.tag }}" -m "Release ${{ steps.release.outputs.tag }}"
+          git push origin "${{ steps.release.outputs.tag }}"
+
+      - name: Dispatch publish workflow
+        if: steps.release.outputs.should_release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Tags pushed with GITHUB_TOKEN do not trigger downstream push workflows,
+          # so dispatch publish.yml explicitly on the release tag.
+          gh workflow run publish.yml --ref "${{ steps.release.outputs.tag }}"
