@@ -10,8 +10,8 @@ from typing import Any, Mapping, cast
 
 
 DAGZOO_HANDOFF_SCHEMA_NAME = "dagzoo_generate_handoff_manifest"
-SUPPORTED_DAGZOO_HANDOFF_SCHEMA_VERSIONS = (1, 2)
-DAGZOO_HANDOFF_SCHEMA_VERSION = 2
+SUPPORTED_DAGZOO_HANDOFF_SCHEMA_VERSIONS = (1, 2, 3)
+DAGZOO_HANDOFF_SCHEMA_VERSION = 3
 _DAGZOO_ID_HEX_LENGTH = 32
 _GENERATED_CORPUS_ID_DIGEST_BYTES = 16
 
@@ -38,6 +38,7 @@ class DagzooHandoffInfo:
     generated_corpus_id: str
     generated_dir: Path
     curated_dir: Path | None = None
+    provenance: dict[str, Any] | None = None
     teacher_conditionals: dict[str, Any] | None = None
 
     def to_summary_dict(self) -> dict[str, Any]:
@@ -50,6 +51,8 @@ class DagzooHandoffInfo:
             "generated_dir": str(self.generated_dir),
             "curated_dir": None if self.curated_dir is None else str(self.curated_dir),
         }
+        if self.provenance is not None:
+            payload["provenance"] = dict(self.provenance)
         if self.teacher_conditionals is not None:
             payload["teacher_conditionals"] = dict(self.teacher_conditionals)
         return payload
@@ -312,6 +315,62 @@ def _teacher_summary_from_v2(
     }
 
 
+def _normalized_range_mapping(
+    payload: Mapping[str, Any],
+    key: str,
+    *,
+    path: Path,
+) -> dict[str, Any] | None:
+    range_payload = _require_optional_mapping(payload, key, path=path)
+    if range_payload is None:
+        return None
+    normalized: dict[str, Any] = {}
+    minimum = range_payload.get("min")
+    maximum = range_payload.get("max")
+    if minimum is not None:
+        if isinstance(minimum, bool) or not isinstance(minimum, (int, float)):
+            raise RuntimeError(
+                "dagzoo handoff range bound must be numeric when present: "
+                f"path={path}, key={key}.min"
+            )
+        normalized["min"] = float(minimum) if isinstance(minimum, float) else int(minimum)
+    if maximum is not None:
+        if isinstance(maximum, bool) or not isinstance(maximum, (int, float)):
+            raise RuntimeError(
+                "dagzoo handoff range bound must be numeric when present: "
+                f"path={path}, key={key}.max"
+            )
+        normalized["max"] = float(maximum) if isinstance(maximum, float) else int(maximum)
+    return normalized or None
+
+
+def _provenance_summary_from_v3(
+    payload: Mapping[str, Any],
+    *,
+    path: Path,
+) -> dict[str, Any] | None:
+    provenance = _require_optional_mapping(payload, "provenance", path=path)
+    if provenance is None:
+        return None
+    summary: dict[str, Any] = {}
+    target_derivation = provenance.get("target_derivation")
+    if target_derivation is not None:
+        if not isinstance(target_derivation, str) or not target_derivation.strip():
+            raise RuntimeError(
+                "dagzoo handoff provenance.target_derivation must be a non-empty string "
+                f"when present: path={path}"
+            )
+        summary["target_derivation"] = target_derivation
+    for key in (
+        "target_relevant_feature_count_range",
+        "target_relevant_feature_fraction_range",
+    ):
+        normalized = _normalized_range_mapping(provenance, key, path=path)
+        if normalized is not None:
+            summary[key] = normalized
+    return summary or None
+
+
 def load_dagzoo_handoff_info(handoff_manifest_path: Path) -> DagzooHandoffInfo:
     """Load and validate the dagzoo handoff subset used by manifest builders."""
 
@@ -370,8 +429,9 @@ def load_dagzoo_handoff_info(handoff_manifest_path: Path) -> DagzooHandoffInfo:
     teacher_conditionals = (
         _teacher_summary_from_v1(payload, path=path)
         if int(schema_version) == 1
-        else _teacher_summary_from_v2(payload, path=path)
+        else (_teacher_summary_from_v2(payload, path=path) if int(schema_version) == 2 else None)
     )
+    provenance = _provenance_summary_from_v3(payload, path=path) if int(schema_version) >= 3 else None
 
     return DagzooHandoffInfo(
         handoff_manifest_path=path,
@@ -381,5 +441,6 @@ def load_dagzoo_handoff_info(handoff_manifest_path: Path) -> DagzooHandoffInfo:
         generated_corpus_id=generated_corpus_id,
         generated_dir=generated_dir,
         curated_dir=curated_dir,
+        provenance=provenance,
         teacher_conditionals=teacher_conditionals,
     )
