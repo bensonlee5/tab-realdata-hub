@@ -8,6 +8,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+import tab_realdata_hub.dagzoo_handoff as dagzoo_handoff_module
 import tab_realdata_hub.manifest as manifest_module
 import tab_realdata_hub.openml as openml_module
 
@@ -134,6 +135,75 @@ def test_manifest_build_and_inspect_round_trip(tmp_path: Path) -> None:
     assert len(inspection["manifest_sha256"]) == 64
     assert inspection["task_counts"] == {"classification": 1}
     assert inspection["persisted_summary"]["total_records"] == 1
+
+
+def test_build_manifest_persists_dagzoo_handoff_v3_provenance(tmp_path: Path) -> None:
+    generated_root = tmp_path / "generated"
+    generate_run_id = "a" * 32
+    dataset_id = "b" * 32
+    _write_dataset(
+        generated_root / "shard_00001_case",
+        metadata={
+            "dataset_id": dataset_id,
+            "split_groups": {"request_run": generate_run_id},
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "generated", "status": "accepted", "accepted": True},
+        },
+    )
+    handoff_manifest_path = tmp_path / "dagzoo_handoff.json"
+    handoff_manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_name": dagzoo_handoff_module.DAGZOO_HANDOFF_SCHEMA_NAME,
+                "schema_version": dagzoo_handoff_module.DAGZOO_HANDOFF_SCHEMA_VERSION,
+                "identity": {
+                    "source_family": "dagzoo",
+                    "generate_run_id": generate_run_id,
+                    "generated_corpus_id": dagzoo_handoff_module.stable_dagzoo_generated_corpus_id(
+                        generate_run_id=generate_run_id,
+                        dataset_ids=[dataset_id],
+                    ),
+                },
+                "artifacts_relative": {
+                    "generated_dir": "generated",
+                },
+                "provenance": {
+                    "target_derivation": "teacher_predictions",
+                    "target_relevant_feature_count_range": {"min": 1, "max": 4},
+                    "target_relevant_feature_fraction_range": {"min": 0.25, "max": 0.75},
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    manifest_path = tmp_path / "manifest.parquet"
+    summary = manifest_module.build_manifest(
+        [generated_root],
+        manifest_path,
+        dagzoo_handoff_manifest_path=handoff_manifest_path,
+    )
+    expected_provenance = {
+        "target_derivation": "teacher_predictions",
+        "target_relevant_feature_count_range": {"min": 1, "max": 4},
+        "target_relevant_feature_fraction_range": {"min": 0.25, "max": 0.75},
+    }
+
+    assert summary.dagzoo_handoff is not None
+    assert summary.dagzoo_handoff["provenance"] == expected_provenance
+    assert "teacher_conditionals" not in summary.dagzoo_handoff
+    assert summary.dagzoo_handoff["generated_dir"] == str(generated_root.resolve())
+    assert summary.dagzoo_handoff["handoff_manifest_path"] == str(handoff_manifest_path.resolve())
+    assert len(summary.dagzoo_handoff["handoff_manifest_sha256"]) == 64
+
+    inspection = manifest_module.inspect_manifest(manifest_path)
+    assert inspection["persisted_summary"]["dagzoo_handoff"]["provenance"] == expected_provenance
 
 
 def test_load_manifest_datasets_reads_generic_manifest_surface(tmp_path: Path) -> None:
