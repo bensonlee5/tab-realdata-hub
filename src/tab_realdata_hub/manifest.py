@@ -8,7 +8,7 @@ from hashlib import md5, sha1, sha256
 import json
 import os
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Mapping, cast
 
 import numpy as np
 import pyarrow as pa
