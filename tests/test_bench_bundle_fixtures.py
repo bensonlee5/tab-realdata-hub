@@ -10,9 +10,9 @@ def _bundle_path(name: str) -> Path:
 
 
 def test_checked_in_classification_medium_bundle_matches_contract() -> None:
-    bundle = openml_module.load_bundle(_bundle_path("nanotabpfn_openml_classification_medium_v1.json"), allow_missing_values=True)
+    bundle = openml_module.load_bundle(_bundle_path("openml_classification_medium_v1.json"), allow_missing_values=True)
 
-    assert bundle["name"] == "nanotabpfn_openml_classification_medium"
+    assert bundle["name"] == "openml_classification_medium"
     assert bundle["selection"] == {
         "new_instances": 200,
         "task_type": "supervised_classification",
@@ -26,9 +26,9 @@ def test_checked_in_classification_medium_bundle_matches_contract() -> None:
 
 
 def test_checked_in_classification_large_bundle_matches_contract() -> None:
-    bundle = openml_module.load_bundle(_bundle_path("nanotabpfn_openml_classification_large_v1.json"), allow_missing_values=True)
+    bundle = openml_module.load_bundle(_bundle_path("openml_classification_large_v1.json"), allow_missing_values=True)
 
-    assert bundle["name"] == "nanotabpfn_openml_classification_large"
+    assert bundle["name"] == "openml_classification_large"
     assert bundle["selection"] == {
         "new_instances": 200,
         "task_type": "supervised_classification",

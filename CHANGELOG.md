@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-04-02
+
+### Changed
+
+- User-facing note: checked-in TF-RD-010 multiclass validation bundle
+  artifacts dropped the legacy prefix. The checked-in filenames are now
+  `src/tab_realdata_hub/bench/openml_classification_medium_v1.json` and
+  `src/tab_realdata_hub/bench/openml_classification_large_v1.json`, and the
+  bundle `name` values are now `openml_classification_medium` and
+  `openml_classification_large`.
+
 ## [0.1.4] - 2026-04-01
 
 ### Changed
@@ -50,9 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   remaining backward-compatible with older bundle JSON that omitted it.
 - User-facing note: added checked-in TF-RD-010 multiclass validation bundle
   definitions at
-  `src/tab_realdata_hub/bench/nanotabpfn_openml_classification_medium_v1.json`
+  `src/tab_realdata_hub/bench/openml_classification_medium_v1.json`
   and
-  `src/tab_realdata_hub/bench/nanotabpfn_openml_classification_large_v1.json`.
+  `src/tab_realdata_hub/bench/openml_classification_large_v1.json`.
   The medium bundle is the clean no-missing rung and the large bundle is the
   allow-missing rung consumed downstream under `data/manifests/bench/`.
 - User-facing note: OpenML discovery now deterministically dedupes duplicate

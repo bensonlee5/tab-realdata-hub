@@ -1,5 +1,5 @@
 {
-  "name": "nanotabpfn_openml_classification_medium",
+  "name": "openml_classification_medium",
   "selection": {
     "max_classes": 10,
     "max_features": 10,
