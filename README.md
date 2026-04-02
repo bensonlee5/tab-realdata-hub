@@ -52,8 +52,8 @@ uv sync
 The repo now tracks two hub-owned classification validation bundles for
 `tab-foundry` under `src/tab_realdata_hub/bench/`:
 
-- `nanotabpfn_openml_classification_medium_v1.json`
-- `nanotabpfn_openml_classification_large_v1.json`
+- `openml_classification_medium_v1.json`
+- `openml_classification_large_v1.json`
 
 The current TF-RD-010 contract is:
 
@@ -68,8 +68,8 @@ source with:
 
 ```bash
 .venv/bin/tab-realdata-hub bundle build-openml \
-  --out-path src/tab_realdata_hub/bench/nanotabpfn_openml_classification_medium_v1.json \
-  --bundle-name nanotabpfn_openml_classification_medium \
+  --out-path src/tab_realdata_hub/bench/openml_classification_medium_v1.json \
+  --bundle-name openml_classification_medium \
   --version 1 \
   --task-source tabarena_v0_1 \
   --new-instances 200 \
@@ -80,8 +80,8 @@ source with:
   --min-minority-class-pct 2.5
 
 .venv/bin/tab-realdata-hub bundle build-openml \
-  --out-path src/tab_realdata_hub/bench/nanotabpfn_openml_classification_large_v1.json \
-  --bundle-name nanotabpfn_openml_classification_large \
+  --out-path src/tab_realdata_hub/bench/openml_classification_large_v1.json \
+  --bundle-name openml_classification_large \
   --version 1 \
   --task-source tabarena_v0_1 \
   --new-instances 200 \
@@ -97,20 +97,20 @@ downstream by `tab-foundry` with:
 
 ```bash
 .venv/bin/tab-realdata-hub materialize openml-bundle \
-  --bundle-path src/tab_realdata_hub/bench/nanotabpfn_openml_classification_medium_v1.json \
-  --out-root data/manifests/bench/nanotabpfn_openml_classification_medium_v1
+  --bundle-path src/tab_realdata_hub/bench/openml_classification_medium_v1.json \
+  --out-root data/manifests/bench/openml_classification_medium_v1
 
 .venv/bin/tab-realdata-hub materialize openml-bundle \
-  --bundle-path src/tab_realdata_hub/bench/nanotabpfn_openml_classification_large_v1.json \
-  --out-root data/manifests/bench/nanotabpfn_openml_classification_large_v1
+  --bundle-path src/tab_realdata_hub/bench/openml_classification_large_v1.json \
+  --out-root data/manifests/bench/openml_classification_large_v1
 ```
 
 Inspect the resulting manifests with:
 
 ```bash
 .venv/bin/tab-realdata-hub manifest inspect \
-  --manifest data/manifests/bench/nanotabpfn_openml_classification_medium_v1/manifest.parquet
+  --manifest data/manifests/bench/openml_classification_medium_v1/manifest.parquet
 
 .venv/bin/tab-realdata-hub manifest inspect \
-  --manifest data/manifests/bench/nanotabpfn_openml_classification_large_v1/manifest.parquet
+  --manifest data/manifests/bench/openml_classification_large_v1/manifest.parquet
 ```
