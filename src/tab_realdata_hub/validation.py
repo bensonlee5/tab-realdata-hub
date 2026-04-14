@@ -9,6 +9,7 @@ import numpy as np
 
 MISSING_VALUE_STATUS_CLEAN = "clean"
 MISSING_VALUE_STATUS_CONTAINS_NAN_OR_INF = "contains_nan_or_inf"
+MISSING_VALUE_STATUS_NOT_CHECKED = "not_checked"
 SUPPORTED_MISSING_VALUE_POLICIES = ("allow_any", "forbid_any")
 
 

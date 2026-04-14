@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-04-14
+
+### Changed
+
+- User-facing note: manifest builds with `missing_value_policy=allow_any` now
+  avoid full value-column scans, mark missing-value status as `not_checked`,
+  and emit progress telemetry during large parquet index construction while
+  preserving the existing manifest contract.
+
 ## [0.1.6] - 2026-04-14
 
 ### Changed

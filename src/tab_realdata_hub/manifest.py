@@ -8,6 +8,8 @@ from hashlib import md5, sha1, sha256
 import json
 import os
 from pathlib import Path
+import sys
+import time
 from typing import Any, Mapping, cast
 
 import numpy as np
@@ -24,6 +26,7 @@ from .dagzoo_handoff import (
 from .validation import (
     MISSING_VALUE_STATUS_CLEAN,
     MISSING_VALUE_STATUS_CONTAINS_NAN_OR_INF,
+    MISSING_VALUE_STATUS_NOT_CHECKED,
     SUPPORTED_MISSING_VALUE_POLICIES,
     assert_no_non_finite_values,
     missing_value_status,
@@ -68,6 +71,8 @@ SPLIT_BUCKET_COUNT = 10_000
 SHORT_DIGEST_HEX_CHARS = 12
 DATASET_INDEX_WIDTH = 6
 SUPPORTED_FILTER_POLICIES = ("include_all", "accepted_only")
+MANIFEST_PROGRESS_INTERVAL_SECONDS = 30.0
+MANIFEST_PROGRESS_SHARD_INTERVAL = 1_000
 
 
 @dataclass(slots=True)
@@ -385,6 +390,43 @@ def _missing_value_status_by_dataset(split_path: Path) -> dict[int, str]:
     return status_by_dataset
 
 
+def _dataset_indices_by_split(split_path: Path) -> set[int]:
+    """Return dataset indices present in one packed split parquet."""
+
+    try:
+        table = pq.read_table(split_path, columns=["dataset_index"])
+    except Exception as exc:
+        raise RuntimeError(f"failed to scan packed split dataset indices: {split_path}") from exc
+
+    if table.num_rows <= 0:
+        return set()
+    return {int(dataset_index) for dataset_index in table["dataset_index"].to_pylist()}
+
+
+def _emit_manifest_progress(
+    event: str,
+    *,
+    out_path: Path,
+    start_time: float,
+    roots_scanned: int,
+    shards_scanned: int,
+    discovered_records: int,
+    selected_records: int,
+) -> None:
+    elapsed = max(0.0, float(time.perf_counter() - start_time))
+    print(
+        "manifest build "
+        f"{event}: out_path={out_path} "
+        f"roots_scanned={roots_scanned} "
+        f"shards_scanned={shards_scanned} "
+        f"discovered_records={discovered_records} "
+        f"selected_records={selected_records} "
+        f"elapsed_seconds={elapsed:.2f}",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def _manifest_schema_metadata(*, summary: ManifestSummary) -> dict[bytes, bytes]:
     contract_payload = {
         "version": int(MANIFEST_CONTRACT_VERSION),
@@ -455,9 +497,32 @@ def build_manifest(
     missing_value_status_counts: Counter[str] = Counter()
     excluded_for_missing_values = 0
     dagzoo_generated_identity = None if dagzoo_handoff is None else DagzooGeneratedIdentityAccumulator()
+    progress_start_time = time.perf_counter()
+    last_progress_time = progress_start_time
+    roots_scanned = 0
+    shards_scanned = 0
+
+    def emit_progress(event: str, *, force: bool = False) -> None:
+        nonlocal last_progress_time
+        now = time.perf_counter()
+        if not force and now - last_progress_time < MANIFEST_PROGRESS_INTERVAL_SECONDS:
+            return
+        last_progress_time = now
+        _emit_manifest_progress(
+            event,
+            out_path=out_path,
+            start_time=progress_start_time,
+            roots_scanned=roots_scanned,
+            shards_scanned=shards_scanned,
+            discovered_records=discovered_records,
+            selected_records=len(records),
+        )
+
+    emit_progress("started", force=True)
     for root in roots:
         if not root.exists():
             continue
+        roots_scanned += 1
         source_root_id = _root_id(root)
         root_kind = None
         if dagzoo_handoff is not None:
@@ -468,14 +533,23 @@ def build_manifest(
         elif root.name == "curated":
             root_kind = "curated"
         for shard_dir in _iter_shard_dirs(root):
+            shards_scanned += 1
             train_path = shard_dir / "train.parquet"
             test_path = shard_dir / "test.parquet"
             catalog_path = _catalog_path_for_shard(shard_dir)
             if catalog_path is None or not (train_path.exists() and test_path.exists()):
                 continue
             teacher_conditionals_path = _teacher_conditionals_path_for_shard(shard_dir)
-            train_missing_status = _missing_value_status_by_dataset(train_path)
-            test_missing_status = _missing_value_status_by_dataset(test_path)
+            if missing_value_policy == "forbid_any":
+                train_missing_status = _missing_value_status_by_dataset(train_path)
+                test_missing_status = _missing_value_status_by_dataset(test_path)
+                train_dataset_indices = set(train_missing_status)
+                test_dataset_indices = set(test_missing_status)
+            else:
+                train_missing_status = {}
+                test_missing_status = {}
+                train_dataset_indices = _dataset_indices_by_split(train_path)
+                test_dataset_indices = _dataset_indices_by_split(test_path)
 
             shard_id = _extract_shard_id(shard_dir)
             for offset, size, record_sha256, record in _read_ndjson_records(catalog_path):
@@ -515,9 +589,9 @@ def build_manifest(
                 ):
                     continue
                 missing_splits: list[str] = []
-                if dataset_index not in train_missing_status:
+                if dataset_index not in train_dataset_indices:
                     missing_splits.append(train_path.name)
-                if dataset_index not in test_missing_status:
+                if dataset_index not in test_dataset_indices:
                     missing_splits.append(test_path.name)
                 if missing_splits:
                     raise RuntimeError(
@@ -525,14 +599,17 @@ def build_manifest(
                         f"shard={shard_dir}, path={catalog_path}, dataset_index={dataset_index}, "
                         f"missing_splits={','.join(missing_splits)}"
                     )
-                train_missing_value_status = train_missing_status[dataset_index]
-                test_missing_value_status = test_missing_status[dataset_index]
-                record_missing_value_status = (
-                    MISSING_VALUE_STATUS_CLEAN
-                    if train_missing_value_status == MISSING_VALUE_STATUS_CLEAN
-                    and test_missing_value_status == MISSING_VALUE_STATUS_CLEAN
-                    else MISSING_VALUE_STATUS_CONTAINS_NAN_OR_INF
-                )
+                if missing_value_policy == "forbid_any":
+                    train_missing_value_status = train_missing_status[dataset_index]
+                    test_missing_value_status = test_missing_status[dataset_index]
+                    record_missing_value_status = (
+                        MISSING_VALUE_STATUS_CLEAN
+                        if train_missing_value_status == MISSING_VALUE_STATUS_CLEAN
+                        and test_missing_value_status == MISSING_VALUE_STATUS_CLEAN
+                        else MISSING_VALUE_STATUS_CONTAINS_NAN_OR_INF
+                    )
+                else:
+                    record_missing_value_status = MISSING_VALUE_STATUS_NOT_CHECKED
                 missing_value_status_counts[record_missing_value_status] += 1
                 if (
                     missing_value_policy == "forbid_any"
@@ -606,6 +683,8 @@ def build_manifest(
                         "missing_value_status": record_missing_value_status,
                     }
                 )
+            if shards_scanned % MANIFEST_PROGRESS_SHARD_INTERVAL == 0:
+                emit_progress("scanning")
 
     if discovered_records <= 0:
         raise RuntimeError("no datasets discovered while building manifest")
@@ -663,10 +742,12 @@ def build_manifest(
         ),
         dagzoo_handoff=dagzoo_handoff_summary,
     )
+    emit_progress("writing manifest parquet", force=True)
     table = pa.Table.from_pylist(records).replace_schema_metadata(
         _manifest_schema_metadata(summary=summary)
     )
     pq.write_table(table, out_path, compression="zstd")
+    emit_progress("manifest parquet written", force=True)
     return summary
 
 
@@ -1153,7 +1234,8 @@ def manifest_characteristics(manifest_path: Path) -> dict[str, Any]:
     filter_status_counts = Counter(str(row.get("filter_status", "missing")) for row in rows)
     missing_value_status_counts = Counter(str(row.get("missing_value_status", "missing")) for row in rows)
     has_complete_missing_value_metadata = bool(rows) and all(
-        status is not None for status in missing_value_statuses
+        status in {MISSING_VALUE_STATUS_CLEAN, MISSING_VALUE_STATUS_CONTAINS_NAN_OR_INF}
+        for status in missing_value_statuses
     )
     missing_value_policies = sorted(
         {
@@ -1208,9 +1290,9 @@ def manifest_characteristics(manifest_path: Path) -> dict[str, Any]:
         "missing_value_status_counts": dict(sorted(missing_value_status_counts.items())),
         "missing_value_policy": None if len(missing_value_policies) != 1 else missing_value_policies[0],
         "all_records_no_missing": (
-            None
-            if not has_complete_missing_value_metadata
-            else missing_value_status_counts.get("contains_nan_or_inf", 0) == 0
+            False
+            if missing_value_status_counts.get(MISSING_VALUE_STATUS_CONTAINS_NAN_OR_INF, 0) > 0
+            else (True if has_complete_missing_value_metadata else None)
         ),
         "persisted_summary": persisted_summary,
         "source_root_ids": source_root_ids,

@@ -291,6 +291,108 @@ def test_build_manifest_accepts_curated_root_without_embedded_filter_metadata(tm
     assert inspection["persisted_summary"]["filter_policy"] == "accepted_only"
 
 
+def test_build_manifest_allow_any_skips_value_column_scans(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    curated_root = tmp_path / "curated"
+    _write_dataset(
+        curated_root / "shard_00001_case",
+        metadata={
+            "dataset_id": "c" * 32,
+            "split_groups": {"request_run": "d" * 32},
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+        },
+    )
+    original_read_table = manifest_module.pq.read_table
+    observed_columns: list[tuple[str, ...] | None] = []
+
+    def read_table_spy(*args: Any, **kwargs: Any) -> pa.Table:
+        columns = kwargs.get("columns")
+        if columns is not None:
+            normalized_columns = tuple(str(column) for column in columns)
+            assert "x" not in normalized_columns
+            assert "y" not in normalized_columns
+            observed_columns.append(normalized_columns)
+        else:
+            observed_columns.append(None)
+        return original_read_table(*args, **kwargs)
+
+    monkeypatch.setattr(manifest_module.pq, "read_table", read_table_spy)
+
+    manifest_path = tmp_path / "manifest.parquet"
+    summary = manifest_module.build_manifest(
+        [curated_root],
+        manifest_path,
+        filter_policy="accepted_only",
+        missing_value_policy="allow_any",
+    )
+    rows = original_read_table(manifest_path).to_pylist()
+    inspection = manifest_module.inspect_manifest(manifest_path)
+    captured = capsys.readouterr()
+
+    assert ("dataset_index",) in observed_columns
+    assert summary.total_records == 1
+    assert summary.missing_value_status_counts == {"not_checked": 1}
+    assert rows[0]["missing_value_status"] == "not_checked"
+    assert inspection["persisted_summary"]["missing_value_policy"] == "allow_any"
+    assert inspection["persisted_summary"]["total_records"] == 1
+    assert (
+        inspection["persisted_summary"]["train_records"]
+        + inspection["persisted_summary"]["val_records"]
+        + inspection["persisted_summary"]["test_records"]
+        == 1
+    )
+    assert inspection["missing_value_status_counts"] == {"not_checked": 1}
+    assert "manifest build started:" in captured.err
+    assert "manifest build writing manifest parquet:" in captured.err
+    assert "manifest build manifest parquet written:" in captured.err
+
+
+def test_build_manifest_allow_any_still_validates_split_dataset_indices(tmp_path: Path) -> None:
+    root = tmp_path / "run"
+    shard_dir = root / "shard_00000"
+    shard_dir.mkdir(parents=True, exist_ok=True)
+    x_train = np.array([[0.0, 1.0], [1.0, 2.0]], dtype=np.float32)
+    y_train = np.array([0, 1], dtype=np.int64)
+    pq.write_table(_build_split_table([(0, x_train, y_train)]), shard_dir / "train.parquet")
+    pq.write_table(_build_split_table([]), shard_dir / "test.parquet")
+    payload = {
+        "dataset_index": 0,
+        "n_train": 2,
+        "n_test": 0,
+        "n_features": 2,
+        "feature_types": ["floating", "floating"],
+        "metadata": {
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "deferred", "status": "accepted", "accepted": True},
+        },
+    }
+    with (shard_dir / "metadata.ndjson").open("w", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+
+    try:
+        manifest_module.build_manifest(
+            [root],
+            tmp_path / "manifest.parquet",
+            filter_policy="accepted_only",
+            missing_value_policy="allow_any",
+        )
+    except RuntimeError as exc:
+        message = str(exc)
+        assert "dataset_index=0" in message
+        assert "test.parquet" in message
+    else:  # pragma: no cover - defensive failure
+        raise AssertionError("expected missing test split dataset_index to raise")
+
+
 def test_load_manifest_datasets_reads_generic_manifest_surface(tmp_path: Path) -> None:
     root = tmp_path / "packed_shards"
     _write_dataset(
