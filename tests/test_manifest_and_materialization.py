@@ -50,8 +50,7 @@ def _write_dataset(shard_dir: Path, *, metadata: dict[str, Any]) -> None:
         "feature_types": ["floating", "floating"],
         "metadata": metadata,
     }
-    with (shard_dir / "metadata.ndjson").open("w", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    manifest_module.write_dataset_catalog(shard_dir / "dataset_catalog.parquet", [payload])
 
 
 def _prepared_task(
@@ -375,8 +374,7 @@ def test_build_manifest_allow_any_still_validates_split_dataset_indices(tmp_path
             "filter": {"mode": "deferred", "status": "accepted", "accepted": True},
         },
     }
-    with (shard_dir / "metadata.ndjson").open("w", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    manifest_module.write_dataset_catalog(shard_dir / "dataset_catalog.parquet", [payload])
 
     try:
         manifest_module.build_manifest(
@@ -467,8 +465,9 @@ def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkey
     manifest_rows = pq.read_table(result.manifest_path).to_pylist()
     assert len(manifest_rows) == 2
 
-    metadata_path = result.data_root / "shard_00001_first_dataset" / "metadata.ndjson"
-    payload = json.loads(metadata_path.read_text(encoding="utf-8").strip())
+    metadata_path = result.data_root / "shard_00001_first_dataset" / "dataset_catalog.parquet"
+    payload = pq.read_table(metadata_path).to_pylist()[0]
+    payload = json.loads(str(payload["record_json"]))
     assert payload["feature_types"] == ["floating", "floating", "floating"]
     assert payload["metadata"]["source_platform"] == "openml"
     assert payload["metadata"]["benchmark_bundle"]["source_path"] == str(bundle_path.resolve())

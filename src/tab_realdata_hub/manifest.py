@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from hashlib import md5, sha1, sha256
 import json
@@ -35,10 +36,11 @@ from .validation import (
 
 MANIFEST_CONTRACT_METADATA_KEY = b"tab_realdata_hub_manifest_contract"
 MANIFEST_SUMMARY_METADATA_KEY = b"tab_foundry_manifest_summary"
-MANIFEST_CONTRACT_VERSION = 2
-SUPPORTED_MANIFEST_CONTRACT_VERSIONS = (1, 2)
-MANIFEST_LOGICAL_LAYOUT = "parquet_index+dataset_catalog"
-DATASET_CATALOG_FILENAME = "dataset_catalog.ndjson"
+MANIFEST_CONTRACT_VERSION = 3
+SUPPORTED_MANIFEST_CONTRACT_VERSIONS = (1, 2, 3)
+MANIFEST_LOGICAL_LAYOUT = "parquet_index+dataset_catalog_parquet"
+DATASET_CATALOG_FILENAME = "dataset_catalog.parquet"
+LEGACY_DATASET_CATALOG_FILENAMES = ("dataset_catalog.ndjson", "metadata.ndjson")
 TEACHER_CONDITIONALS_FILENAME = "teacher_conditionals.parquet"
 MANIFEST_STABLE_INDEX_FIELDS = (
     "dataset_id",
@@ -52,9 +54,8 @@ MANIFEST_STABLE_INDEX_FIELDS = (
     "train_path",
     "test_path",
     "catalog_path",
-    "catalog_offset_bytes",
-    "catalog_size_bytes",
-    "catalog_sha256",
+    "catalog_dataset_index",
+    "catalog_record_sha256",
     "teacher_conditionals_path",
     "n_train",
     "n_test",
@@ -73,6 +74,41 @@ DATASET_INDEX_WIDTH = 6
 SUPPORTED_FILTER_POLICIES = ("include_all", "accepted_only")
 MANIFEST_PROGRESS_INTERVAL_SECONDS = 30.0
 MANIFEST_PROGRESS_SHARD_INTERVAL = 1_000
+DEFAULT_MANIFEST_WORKERS = min(32, max(1, os.cpu_count() or 1))
+
+DATASET_CATALOG_SCHEMA = pa.schema(
+    [
+        pa.field("dataset_index", pa.int64()),
+        pa.field("record_json", pa.large_string()),
+        pa.field("record_sha256", pa.string()),
+        pa.field("resolved_dataset_id", pa.string()),
+        pa.field("resolved_request_run", pa.string()),
+        pa.field("resolved_task", pa.string()),
+        pa.field("resolved_n_train", pa.int64()),
+        pa.field("resolved_n_test", pa.int64()),
+        pa.field("resolved_n_features", pa.int64()),
+        pa.field("resolved_n_classes", pa.int64()),
+        pa.field("resolved_filter_mode", pa.string()),
+        pa.field("resolved_filter_status", pa.string()),
+        pa.field("resolved_filter_accepted", pa.bool_()),
+        pa.field("teacher_conditionals_available", pa.bool_()),
+    ]
+)
+DATASET_CATALOG_MANIFEST_COLUMNS = (
+    "dataset_index",
+    "record_sha256",
+    "resolved_dataset_id",
+    "resolved_request_run",
+    "resolved_task",
+    "resolved_n_train",
+    "resolved_n_test",
+    "resolved_n_features",
+    "resolved_n_classes",
+    "resolved_filter_mode",
+    "resolved_filter_status",
+    "resolved_filter_accepted",
+    "teacher_conditionals_available",
+)
 
 
 @dataclass(slots=True)
@@ -105,6 +141,17 @@ class LoadedManifestDatasets:
     datasets: dict[str, tuple[np.ndarray, np.ndarray]]
     task_records: tuple[dict[str, Any], ...]
     persisted_summary: dict[str, Any] | None = None
+
+
+@dataclass(slots=True)
+class _ShardManifestScanResult:
+    records: list[dict[str, Any]] = field(default_factory=list)
+    discovered_records: int = 0
+    status_counts: Counter[str] = field(default_factory=Counter)
+    missing_value_status_counts: Counter[str] = field(default_factory=Counter)
+    excluded_for_missing_values: int = 0
+    generate_run_id: str | None = None
+    dataset_ids: list[str] = field(default_factory=list)
 
 
 def _stable_split(key: str, train_ratio: float, val_ratio: float) -> str:
@@ -209,6 +256,101 @@ def _infer_task(record_payload: dict[str, Any]) -> str:
         return "classification" if n_classes is not None else "regression"
     n_classes = record_payload.get("n_classes")
     return "classification" if n_classes is not None else "regression"
+
+
+def _canonical_record_json(record_payload: Mapping[str, Any]) -> str:
+    return json.dumps(
+        dict(record_payload),
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
+
+
+def _resolved_catalog_group_ids(record_payload: Mapping[str, Any]) -> Mapping[str, Any] | None:
+    group_ids = record_payload.get("group_ids")
+    if isinstance(group_ids, Mapping):
+        return cast(Mapping[str, Any], group_ids)
+    metadata = record_payload.get("metadata")
+    if isinstance(metadata, Mapping):
+        split_groups = metadata.get("split_groups")
+        if isinstance(split_groups, Mapping):
+            return cast(Mapping[str, Any], split_groups)
+    return None
+
+
+def _resolved_catalog_dataset_id(record_payload: Mapping[str, Any]) -> str | None:
+    dataset_id = record_payload.get("dataset_id")
+    if isinstance(dataset_id, str) and dataset_id.strip():
+        return str(dataset_id)
+    metadata = record_payload.get("metadata")
+    if isinstance(metadata, Mapping):
+        metadata_dataset_id = metadata.get("dataset_id")
+        if isinstance(metadata_dataset_id, str) and metadata_dataset_id.strip():
+            return str(metadata_dataset_id)
+    return None
+
+
+def build_dataset_catalog_row(record_payload: Mapping[str, Any]) -> dict[str, Any]:
+    payload = cast(dict[str, Any], dict(record_payload))
+    record_json = _canonical_record_json(payload)
+    record_sha256 = sha256(record_json.encode("utf-8")).hexdigest()
+    group_ids = _resolved_catalog_group_ids(payload)
+    request_run = group_ids.get("request_run") if isinstance(group_ids, Mapping) else None
+    legacy_metadata = payload.get("metadata")
+    legacy_metadata_mapping = (
+        cast(dict[str, Any], legacy_metadata) if isinstance(legacy_metadata, dict) else None
+    )
+    filter_mode, filter_status, filter_accepted = (
+        _parse_filter_metadata(legacy_metadata_mapping) if legacy_metadata_mapping is not None else (None, None, None)
+    )
+    n_classes_raw = (
+        payload.get("n_classes")
+        if "n_classes" in payload
+        else (
+            legacy_metadata_mapping.get("n_classes")
+            if legacy_metadata_mapping is not None
+            else None
+        )
+    )
+    teacher_summary = payload.get("teacher_conditionals")
+    return {
+        "dataset_index": int(payload["dataset_index"]),
+        "record_json": record_json,
+        "record_sha256": record_sha256,
+        "resolved_dataset_id": _resolved_catalog_dataset_id(payload),
+        "resolved_request_run": (
+            str(request_run)
+            if isinstance(request_run, str) and request_run.strip()
+            else None
+        ),
+        "resolved_task": _infer_task(payload),
+        "resolved_n_train": int(payload.get("n_train", -1)),
+        "resolved_n_test": int(payload.get("n_test", -1)),
+        "resolved_n_features": _coerce_optional_int(
+            payload.get(
+                "n_features",
+                legacy_metadata_mapping.get("n_features", -1)
+                if legacy_metadata_mapping is not None
+                else -1,
+            ),
+            default=-1,
+            context=f"catalog.n_features dataset_index={payload['dataset_index']}",
+        ),
+        "resolved_n_classes": int(n_classes_raw) if n_classes_raw is not None else None,
+        "resolved_filter_mode": filter_mode,
+        "resolved_filter_status": filter_status,
+        "resolved_filter_accepted": filter_accepted,
+        "teacher_conditionals_available": bool(
+            isinstance(teacher_summary, Mapping) and teacher_summary.get("available") is True
+        ),
+    }
+
+
+def write_dataset_catalog(path: Path, records: list[Mapping[str, Any]]) -> None:
+    rows = [build_dataset_catalog_row(record) for record in records]
+    table = pa.Table.from_pylist(rows, schema=DATASET_CATALOG_SCHEMA)
+    pq.write_table(table, path, compression="zstd")
 
 
 def _shard_relpath(root: Path, shard_dir: Path) -> str:
@@ -342,7 +484,15 @@ def _read_ndjson_records(path: Path) -> list[tuple[int, int, str, dict[str, Any]
 
 
 def _catalog_path_for_shard(shard_dir: Path) -> Path | None:
-    for filename in (DATASET_CATALOG_FILENAME, "metadata.ndjson"):
+    for filename in (DATASET_CATALOG_FILENAME,):
+        candidate = shard_dir / filename
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _legacy_catalog_path_for_shard(shard_dir: Path) -> Path | None:
+    for filename in LEGACY_DATASET_CATALOG_FILENAMES:
         candidate = shard_dir / filename
         if candidate.exists():
             return candidate
@@ -403,6 +553,14 @@ def _dataset_indices_by_split(split_path: Path) -> set[int]:
     return {int(dataset_index) for dataset_index in table["dataset_index"].to_pylist()}
 
 
+def _read_dataset_catalog(path: Path, *, columns: tuple[str, ...] | None = None) -> list[dict[str, Any]]:
+    try:
+        table = pq.read_table(path, columns=list(columns) if columns is not None else None)
+    except Exception as exc:
+        raise RuntimeError(f"failed to read dataset catalog parquet: {path}") from exc
+    return cast(list[dict[str, Any]], table.to_pylist())
+
+
 def _emit_manifest_progress(
     event: str,
     *,
@@ -425,6 +583,182 @@ def _emit_manifest_progress(
         file=sys.stderr,
         flush=True,
     )
+
+
+def _resolve_manifest_workers(manifest_workers: int | None) -> int:
+    if manifest_workers is None:
+        return int(DEFAULT_MANIFEST_WORKERS)
+    resolved = int(manifest_workers)
+    if resolved <= 0:
+        raise ValueError(f"manifest_workers must be >= 1, got {manifest_workers!r}")
+    return resolved
+
+
+def _scan_manifest_shard(
+    *,
+    root: Path,
+    root_kind: str | None,
+    shard_dir: Path,
+    source_root_id: str,
+    manifest_dir: Path,
+    train_ratio: float,
+    val_ratio: float,
+    filter_policy: str,
+    missing_value_policy: str,
+) -> _ShardManifestScanResult:
+    train_path = shard_dir / "train.parquet"
+    test_path = shard_dir / "test.parquet"
+    catalog_path = _catalog_path_for_shard(shard_dir)
+    legacy_catalog_path = _legacy_catalog_path_for_shard(shard_dir)
+    if not (train_path.exists() and test_path.exists()):
+        return _ShardManifestScanResult()
+    if catalog_path is None:
+        if legacy_catalog_path is not None:
+            raise RuntimeError(
+                "dataset catalogs must be parquet-backed before manifest build: "
+                f"shard={shard_dir}, legacy_catalog={legacy_catalog_path}"
+            )
+        return _ShardManifestScanResult()
+
+    teacher_conditionals_path = _teacher_conditionals_path_for_shard(shard_dir)
+    if missing_value_policy == "forbid_any":
+        train_missing_status = _missing_value_status_by_dataset(train_path)
+        test_missing_status = _missing_value_status_by_dataset(test_path)
+        train_dataset_indices = set(train_missing_status)
+        test_dataset_indices = set(test_missing_status)
+    else:
+        train_missing_status = {}
+        test_missing_status = {}
+        train_dataset_indices = _dataset_indices_by_split(train_path)
+        test_dataset_indices = _dataset_indices_by_split(test_path)
+
+    source_shard_relpath = _shard_relpath(root, shard_dir)
+    shard_id = _extract_shard_id(shard_dir)
+    catalog_rows = _read_dataset_catalog(path=catalog_path, columns=DATASET_CATALOG_MANIFEST_COLUMNS)
+    result = _ShardManifestScanResult()
+    for catalog_row in catalog_rows:
+        dataset_index = int(catalog_row["dataset_index"])
+        result.discovered_records += 1
+
+        filter_mode = (
+            str(catalog_row["resolved_filter_mode"])
+            if catalog_row.get("resolved_filter_mode") is not None
+            else None
+        )
+        filter_status = (
+            str(catalog_row["resolved_filter_status"])
+            if catalog_row.get("resolved_filter_status") is not None
+            else None
+        )
+        filter_accepted = (
+            bool(catalog_row["resolved_filter_accepted"])
+            if catalog_row.get("resolved_filter_accepted") is not None
+            else None
+        )
+        if root_kind == "curated" and filter_status is None and filter_accepted is None:
+            filter_mode, filter_status, filter_accepted = ("curated", "accepted", True)
+        result.status_counts[_status_bucket(filter_status)] += 1
+        if not _is_record_selected(
+            filter_policy=filter_policy,
+            filter_status=filter_status,
+            filter_accepted=filter_accepted,
+        ):
+            continue
+
+        missing_splits: list[str] = []
+        if dataset_index not in train_dataset_indices:
+            missing_splits.append(train_path.name)
+        if dataset_index not in test_dataset_indices:
+            missing_splits.append(test_path.name)
+        if missing_splits:
+            raise RuntimeError(
+                "catalog dataset_index missing from packed split(s): "
+                f"shard={shard_dir}, path={catalog_path}, dataset_index={dataset_index}, "
+                f"missing_splits={','.join(missing_splits)}"
+            )
+
+        if missing_value_policy == "forbid_any":
+            train_missing_value_status = train_missing_status[dataset_index]
+            test_missing_value_status = test_missing_status[dataset_index]
+            record_missing_value_status = (
+                MISSING_VALUE_STATUS_CLEAN
+                if train_missing_value_status == MISSING_VALUE_STATUS_CLEAN
+                and test_missing_value_status == MISSING_VALUE_STATUS_CLEAN
+                else MISSING_VALUE_STATUS_CONTAINS_NAN_OR_INF
+            )
+        else:
+            record_missing_value_status = MISSING_VALUE_STATUS_NOT_CHECKED
+        result.missing_value_status_counts[record_missing_value_status] += 1
+        if (
+            missing_value_policy == "forbid_any"
+            and record_missing_value_status != MISSING_VALUE_STATUS_CLEAN
+        ):
+            result.excluded_for_missing_values += 1
+            continue
+
+        resolved_dataset_id = catalog_row.get("resolved_dataset_id")
+        resolved_request_run = catalog_row.get("resolved_request_run")
+        if is_canonical_dagzoo_id(resolved_dataset_id) and is_canonical_dagzoo_id(resolved_request_run):
+            dataset_id = str(resolved_dataset_id)
+            dataset_identity_key = _canonical_dagzoo_dataset_identity_key(
+                dataset_id=dataset_id,
+                request_run=str(resolved_request_run),
+            )
+            if result.generate_run_id is None:
+                result.generate_run_id = str(resolved_request_run)
+            elif result.generate_run_id != str(resolved_request_run):
+                raise RuntimeError(
+                    "dagzoo generated corpus contains multiple request_run identities: "
+                    f"shard={shard_dir}, expected={result.generate_run_id!r}, "
+                    f"found={resolved_request_run!r}"
+                )
+            result.dataset_ids.append(dataset_id)
+        else:
+            dataset_id = _dataset_id(
+                root_id=source_root_id,
+                shard_relpath=source_shard_relpath,
+                dataset_index=dataset_index,
+            )
+            dataset_identity_key = dataset_id
+
+        split = _stable_split(dataset_identity_key, train_ratio, val_ratio)
+        result.records.append(
+            {
+                "dataset_id": dataset_id,
+                "dataset_identity_key": dataset_identity_key,
+                "source_root_id": source_root_id,
+                "source_shard_relpath": source_shard_relpath,
+                "split": split,
+                "task": str(catalog_row["resolved_task"]),
+                "shard_id": shard_id,
+                "dataset_index": dataset_index,
+                "train_path": _manifest_relative_path(train_path, manifest_dir=manifest_dir),
+                "test_path": _manifest_relative_path(test_path, manifest_dir=manifest_dir),
+                "catalog_path": _manifest_relative_path(catalog_path, manifest_dir=manifest_dir),
+                "catalog_dataset_index": dataset_index,
+                "catalog_record_sha256": str(catalog_row["record_sha256"]),
+                "teacher_conditionals_path": (
+                    _manifest_relative_path(teacher_conditionals_path, manifest_dir=manifest_dir)
+                    if teacher_conditionals_path is not None
+                    and bool(catalog_row.get("teacher_conditionals_available"))
+                    else None
+                ),
+                "n_train": int(catalog_row["resolved_n_train"]),
+                "n_test": int(catalog_row["resolved_n_test"]),
+                "n_features": int(catalog_row["resolved_n_features"]),
+                "n_classes": (
+                    int(catalog_row["resolved_n_classes"])
+                    if catalog_row.get("resolved_n_classes") is not None
+                    else None
+                ),
+                "filter_mode": filter_mode,
+                "filter_status": filter_status,
+                "filter_accepted": filter_accepted,
+                "missing_value_policy": missing_value_policy,
+                "missing_value_status": record_missing_value_status,
+            }
+        )
+    return result
 
 
 def _manifest_schema_metadata(*, summary: ManifestSummary) -> dict[bytes, bytes]:
@@ -465,6 +799,7 @@ def build_manifest(
     filter_policy: str = "include_all",
     missing_value_policy: str = "allow_any",
     dagzoo_handoff_manifest_path: Path | None = None,
+    manifest_workers: int | None = None,
 ) -> ManifestSummary:
     """Scan parquet roots and persist manifest parquet."""
 
@@ -490,6 +825,7 @@ def build_manifest(
         if dagzoo_handoff_manifest_path is None
         else load_dagzoo_handoff_info(dagzoo_handoff_manifest_path)
     )
+    resolved_manifest_workers = _resolve_manifest_workers(manifest_workers)
 
     records: list[dict[str, Any]] = []
     discovered_records = 0
@@ -499,7 +835,8 @@ def build_manifest(
     dagzoo_generated_identity = None if dagzoo_handoff is None else DagzooGeneratedIdentityAccumulator()
     progress_start_time = time.perf_counter()
     last_progress_time = progress_start_time
-    roots_scanned = 0
+    existing_roots = [root for root in roots if root.exists()]
+    roots_scanned = len(existing_roots)
     shards_scanned = 0
 
     def emit_progress(event: str, *, force: bool = False) -> None:
@@ -519,10 +856,8 @@ def build_manifest(
         )
 
     emit_progress("started", force=True)
-    for root in roots:
-        if not root.exists():
-            continue
-        roots_scanned += 1
+    scan_jobs: list[tuple[Path, str | None, Path, str]] = []
+    for root in existing_roots:
         source_root_id = _root_id(root)
         root_kind = None
         if dagzoo_handoff is not None:
@@ -533,158 +868,49 @@ def build_manifest(
         elif root.name == "curated":
             root_kind = "curated"
         for shard_dir in _iter_shard_dirs(root):
+            scan_jobs.append((root, root_kind, shard_dir, source_root_id))
+
+    with ThreadPoolExecutor(max_workers=resolved_manifest_workers) as executor:
+        futures = [
+            executor.submit(
+                _scan_manifest_shard,
+                root=root,
+                root_kind=root_kind,
+                shard_dir=shard_dir,
+                source_root_id=source_root_id,
+                manifest_dir=manifest_dir,
+                train_ratio=train_ratio,
+                val_ratio=val_ratio,
+                filter_policy=filter_policy,
+                missing_value_policy=missing_value_policy,
+            )
+            for root, root_kind, shard_dir, source_root_id in scan_jobs
+        ]
+        for future in as_completed(futures):
+            result = future.result()
             shards_scanned += 1
-            train_path = shard_dir / "train.parquet"
-            test_path = shard_dir / "test.parquet"
-            catalog_path = _catalog_path_for_shard(shard_dir)
-            if catalog_path is None or not (train_path.exists() and test_path.exists()):
-                continue
-            teacher_conditionals_path = _teacher_conditionals_path_for_shard(shard_dir)
-            if missing_value_policy == "forbid_any":
-                train_missing_status = _missing_value_status_by_dataset(train_path)
-                test_missing_status = _missing_value_status_by_dataset(test_path)
-                train_dataset_indices = set(train_missing_status)
-                test_dataset_indices = set(test_missing_status)
-            else:
-                train_missing_status = {}
-                test_missing_status = {}
-                train_dataset_indices = _dataset_indices_by_split(train_path)
-                test_dataset_indices = _dataset_indices_by_split(test_path)
-
-            shard_id = _extract_shard_id(shard_dir)
-            for offset, size, record_sha256, record in _read_ndjson_records(catalog_path):
-                if "dataset_index" not in record:
+            discovered_records += result.discovered_records
+            status_counts.update(result.status_counts)
+            missing_value_status_counts.update(result.missing_value_status_counts)
+            excluded_for_missing_values += result.excluded_for_missing_values
+            records.extend(result.records)
+            if dagzoo_generated_identity is not None and result.dataset_ids:
+                if result.generate_run_id is None:
+                    raise RuntimeError("dagzoo scan result is missing generate_run_id")
+                if dagzoo_generated_identity.generate_run_id is None:
+                    dagzoo_generated_identity.generate_run_id = result.generate_run_id
+                elif dagzoo_generated_identity.generate_run_id != result.generate_run_id:
                     raise RuntimeError(
-                        f"catalog record missing dataset_index: path={catalog_path}, offset={offset}"
+                        "dagzoo generated corpus contains multiple request_run identities: "
+                        f"expected={dagzoo_generated_identity.generate_run_id!r}, "
+                        f"found={result.generate_run_id!r}"
                     )
-                dataset_index = int(record["dataset_index"])
-                meta = record.get("metadata")
-                legacy_metadata = cast(dict[str, Any], meta) if isinstance(meta, dict) else None
-                discovered_records += 1
-                if dagzoo_generated_identity is not None:
-                    dagzoo_generated_identity.add_record(
-                        record,
-                        record_path=catalog_path,
-                        dataset_index=dataset_index,
-                    )
-
-                source_shard_relpath = _shard_relpath(root, shard_dir)
-                if legacy_metadata is not None:
-                    filter_mode, filter_status, filter_accepted = _parse_filter_metadata(legacy_metadata)
-                    if (
-                        root_kind == "curated"
-                        and filter_status is None
-                        and filter_accepted is None
-                    ):
-                        filter_mode, filter_status, filter_accepted = ("curated", "accepted", True)
-                elif root_kind == "curated":
-                    filter_mode, filter_status, filter_accepted = ("curated", "accepted", True)
-                else:
-                    filter_mode, filter_status, filter_accepted = (None, None, None)
-                status_counts[_status_bucket(filter_status)] += 1
-                if not _is_record_selected(
-                    filter_policy=filter_policy,
-                    filter_status=filter_status,
-                    filter_accepted=filter_accepted,
-                ):
-                    continue
-                missing_splits: list[str] = []
-                if dataset_index not in train_dataset_indices:
-                    missing_splits.append(train_path.name)
-                if dataset_index not in test_dataset_indices:
-                    missing_splits.append(test_path.name)
-                if missing_splits:
-                    raise RuntimeError(
-                        "catalog dataset_index missing from packed split(s): "
-                        f"shard={shard_dir}, path={catalog_path}, dataset_index={dataset_index}, "
-                        f"missing_splits={','.join(missing_splits)}"
-                    )
-                if missing_value_policy == "forbid_any":
-                    train_missing_value_status = train_missing_status[dataset_index]
-                    test_missing_value_status = test_missing_status[dataset_index]
-                    record_missing_value_status = (
-                        MISSING_VALUE_STATUS_CLEAN
-                        if train_missing_value_status == MISSING_VALUE_STATUS_CLEAN
-                        and test_missing_value_status == MISSING_VALUE_STATUS_CLEAN
-                        else MISSING_VALUE_STATUS_CONTAINS_NAN_OR_INF
-                    )
-                else:
-                    record_missing_value_status = MISSING_VALUE_STATUS_NOT_CHECKED
-                missing_value_status_counts[record_missing_value_status] += 1
-                if (
-                    missing_value_policy == "forbid_any"
-                    and record_missing_value_status != MISSING_VALUE_STATUS_CLEAN
-                ):
-                    excluded_for_missing_values += 1
-                    continue
-
-                dsid, dataset_identity_key = _resolved_manifest_identity(
-                    record_payload=record,
-                    root_id=source_root_id,
-                    shard_relpath=source_shard_relpath,
-                    dataset_index=dataset_index,
-                )
-                split = _stable_split(dataset_identity_key, train_ratio, val_ratio)
-                teacher_summary = (
-                    record.get("teacher_conditionals")
-                    if isinstance(record.get("teacher_conditionals"), dict)
-                    else None
-                )
-                teacher_conditionals_manifest_path = (
-                    _manifest_relative_path(teacher_conditionals_path, manifest_dir=manifest_dir)
-                    if teacher_conditionals_path is not None
-                    and isinstance(teacher_summary, dict)
-                    and teacher_summary.get("available") is True
-                    else None
-                )
-                n_classes_raw = (
-                    record.get("n_classes")
-                    if "n_classes" in record
-                    else (legacy_metadata.get("n_classes") if legacy_metadata is not None else None)
-                )
-
-                records.append(
-                    {
-                        "dataset_id": dsid,
-                        "dataset_identity_key": dataset_identity_key,
-                        "source_root_id": source_root_id,
-                        "source_shard_relpath": source_shard_relpath,
-                        "split": split,
-                        "task": _infer_task(record),
-                        "shard_id": shard_id,
-                        "dataset_index": dataset_index,
-                        "train_path": _manifest_relative_path(train_path, manifest_dir=manifest_dir),
-                        "test_path": _manifest_relative_path(test_path, manifest_dir=manifest_dir),
-                        "catalog_path": _manifest_relative_path(catalog_path, manifest_dir=manifest_dir),
-                        "catalog_offset_bytes": offset,
-                        "catalog_size_bytes": size,
-                        "catalog_sha256": record_sha256,
-                        "teacher_conditionals_path": teacher_conditionals_manifest_path,
-                        "n_train": int(record.get("n_train", -1)),
-                        "n_test": int(record.get("n_test", -1)),
-                        "n_features": _coerce_optional_int(
-                            record.get(
-                                "n_features",
-                                legacy_metadata.get("n_features", -1)
-                                if legacy_metadata is not None
-                                else -1,
-                            ),
-                            default=-1,
-                            context=(
-                                f"catalog.n_features path={catalog_path} "
-                                f"dataset_index={dataset_index}"
-                            ),
-                        ),
-                        "n_classes": int(n_classes_raw) if n_classes_raw is not None else None,
-                        "filter_mode": filter_mode,
-                        "filter_status": filter_status,
-                        "filter_accepted": filter_accepted,
-                        "missing_value_policy": missing_value_policy,
-                        "missing_value_status": record_missing_value_status,
-                    }
-                )
-            if shards_scanned % MANIFEST_PROGRESS_SHARD_INTERVAL == 0:
-                emit_progress("scanning")
+                dagzoo_generated_identity.dataset_ids.extend(result.dataset_ids)
+            if (
+                shards_scanned % MANIFEST_PROGRESS_SHARD_INTERVAL == 0
+                or (time.perf_counter() - last_progress_time) >= MANIFEST_PROGRESS_INTERVAL_SECONDS
+            ):
+                emit_progress("scanning", force=True)
 
     if discovered_records <= 0:
         raise RuntimeError("no datasets discovered while building manifest")
@@ -916,7 +1142,70 @@ def _read_ndjson_record_by_offset(
     return payload
 
 
-def _manifest_row_catalog_locator(row: Mapping[str, Any]) -> tuple[str, int, int, str]:
+def _read_parquet_catalog_record(
+    catalog_path: Path,
+    *,
+    dataset_index: int,
+    expected_sha256: str,
+) -> dict[str, Any]:
+    try:
+        table = pq.read_table(
+            catalog_path,
+            filters=[("dataset_index", "=", int(dataset_index))],
+            columns=["dataset_index", "record_json", "record_sha256"],
+        )
+    except Exception as exc:
+        raise RuntimeError(
+            "failed to read parquet catalog record: "
+            f"path={catalog_path}, dataset_index={dataset_index}"
+        ) from exc
+    rows = cast(list[dict[str, Any]], table.to_pylist())
+    if len(rows) != 1:
+        raise RuntimeError(
+            "parquet catalog lookup must resolve exactly one row: "
+            f"path={catalog_path}, dataset_index={dataset_index}, matches={len(rows)}"
+        )
+    row = rows[0]
+    record_json = row.get("record_json")
+    if not isinstance(record_json, str):
+        raise RuntimeError(
+            "parquet catalog record_json must be a string: "
+            f"path={catalog_path}, dataset_index={dataset_index}"
+        )
+    row_sha256 = row.get("record_sha256")
+    if not isinstance(row_sha256, str):
+        raise RuntimeError(
+            "parquet catalog record_sha256 must be a string: "
+            f"path={catalog_path}, dataset_index={dataset_index}"
+        )
+    actual_sha256 = sha256(record_json.encode("utf-8")).hexdigest()
+    if row_sha256 != actual_sha256:
+        raise RuntimeError(
+            "parquet catalog checksum mismatch: "
+            f"path={catalog_path}, dataset_index={dataset_index}, "
+            f"stored={row_sha256}, actual={actual_sha256}"
+        )
+    if actual_sha256 != expected_sha256:
+        raise RuntimeError(
+            "parquet catalog checksum mismatch for manifest locator: "
+            f"path={catalog_path}, dataset_index={dataset_index}, "
+            f"expected={expected_sha256}, actual={actual_sha256}"
+        )
+    try:
+        payload = json.loads(record_json)
+    except Exception as exc:
+        raise RuntimeError(
+            "failed to parse parquet catalog record_json: "
+            f"path={catalog_path}, dataset_index={dataset_index}"
+        ) from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError(
+            f"parquet catalog payload must be an object: path={catalog_path}, dataset_index={dataset_index}"
+        )
+    return payload
+
+
+def _legacy_manifest_row_catalog_locator(row: Mapping[str, Any]) -> tuple[str, int, int, str]:
     if "catalog_path" in row:
         return (
             str(row["catalog_path"]),
@@ -937,7 +1226,14 @@ def load_manifest_record_catalog(
     *,
     record: Mapping[str, Any],
 ) -> dict[str, Any]:
-    raw_path, offset_bytes, size_bytes, expected_sha256 = _manifest_row_catalog_locator(record)
+    if "catalog_dataset_index" in record:
+        catalog_path = _resolve_record_path(manifest_path, str(record["catalog_path"]))
+        return _read_parquet_catalog_record(
+            catalog_path,
+            dataset_index=int(record["catalog_dataset_index"]),
+            expected_sha256=str(record["catalog_record_sha256"]),
+        )
+    raw_path, offset_bytes, size_bytes, expected_sha256 = _legacy_manifest_row_catalog_locator(record)
     catalog_path = _resolve_record_path(manifest_path, raw_path)
     return _read_ndjson_record_by_offset(
         catalog_path,

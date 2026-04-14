@@ -24,7 +24,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, LabelEncoder, OrdinalEncoder
 
 from ._json import write_json
-from .manifest import build_manifest
+from .manifest import build_manifest, write_dataset_catalog
 
 
 _CLASSIFICATION_TASK_TYPE = "supervised_classification"
@@ -1317,8 +1317,7 @@ def _write_packed_shard(
         "feature_types": ["floating"] * int(x_train.shape[1]),
         "metadata": metadata,
     }
-    with (shard_dir / "metadata.ndjson").open("w", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    write_dataset_catalog(shard_dir / "dataset_catalog.parquet", [payload])
 
 
 def _split_prepared_task(
