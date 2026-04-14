@@ -10,8 +10,8 @@ from typing import Any, Mapping, cast
 
 
 DAGZOO_HANDOFF_SCHEMA_NAME = "dagzoo_generate_handoff_manifest"
-SUPPORTED_DAGZOO_HANDOFF_SCHEMA_VERSIONS = (1, 2, 3, 4)
-DAGZOO_HANDOFF_SCHEMA_VERSION = 4
+SUPPORTED_DAGZOO_HANDOFF_SCHEMA_VERSIONS = (1, 2, 3, 4, 5)
+DAGZOO_HANDOFF_SCHEMA_VERSION = 5
 _DAGZOO_ID_HEX_LENGTH = 32
 _GENERATED_CORPUS_ID_DIGEST_BYTES = 16
 
@@ -361,6 +361,9 @@ def _provenance_summary_from_v3(
                 f"when present: path={path}"
             )
         summary["target_derivation"] = target_derivation
+    intervention = _intervention_summary_from_v5(provenance, path=path)
+    if intervention is not None:
+        summary["intervention"] = intervention
     for key in (
         "target_relevant_feature_count_range",
         "target_relevant_feature_fraction_range",
@@ -369,6 +372,25 @@ def _provenance_summary_from_v3(
         if normalized is not None:
             summary[key] = normalized
     return summary or None
+
+
+def _intervention_summary_from_v5(
+    provenance: Mapping[str, Any],
+    *,
+    path: Path,
+) -> dict[str, str] | None:
+    intervention = _require_optional_mapping(provenance, "intervention", path=path)
+    if intervention is None:
+        return None
+    mode = _require_non_empty_string(intervention, "mode", path=path)
+    signature = _require_hex_string_value(
+        intervention.get("signature"),
+        context=(
+            "dagzoo handoff provenance.intervention.signature must be a "
+            f"{_DAGZOO_ID_HEX_LENGTH}-character lowercase hex string: path={path}"
+        ),
+    )
+    return {"mode": mode, "signature": signature}
 
 
 def load_dagzoo_handoff_info(handoff_manifest_path: Path) -> DagzooHandoffInfo:
