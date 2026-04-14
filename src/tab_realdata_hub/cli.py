@@ -45,6 +45,7 @@ def _run_manifest_build(args: argparse.Namespace) -> int:
         val_ratio=float(args.val_ratio),
         filter_policy=str(args.filter_policy),
         missing_value_policy=str(args.missing_value_policy),
+        manifest_workers=(None if args.manifest_workers is None else int(args.manifest_workers)),
     )
     _print_manifest_summary(summary)
     return 0
@@ -118,9 +119,15 @@ def build_parser() -> argparse.ArgumentParser:
     manifest_parser = root.add_parser("manifest", help="Manifest build and inspect commands")
     manifest_nested = manifest_parser.add_subparsers(dest="manifest_command", required=True)
 
-    manifest_build = manifest_nested.add_parser("build", help="Build one manifest from packed shard roots")
-    manifest_build.add_argument("--data-root", action="append", required=True, help="Packed shard root")
-    manifest_build.add_argument("--out-manifest", required=True, help="Output manifest parquet path")
+    manifest_build = manifest_nested.add_parser(
+        "build", help="Build one manifest from packed shard roots"
+    )
+    manifest_build.add_argument(
+        "--data-root", action="append", required=True, help="Packed shard root"
+    )
+    manifest_build.add_argument(
+        "--out-manifest", required=True, help="Output manifest parquet path"
+    )
     manifest_build.add_argument("--train-ratio", type=float, default=0.90)
     manifest_build.add_argument("--val-ratio", type=float, default=0.05)
     manifest_build.add_argument(
@@ -133,6 +140,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("allow_any", "forbid_any"),
         default="allow_any",
     )
+    manifest_build.add_argument("--manifest-workers", type=int, default=None)
     manifest_build.set_defaults(func=_run_manifest_build)
 
     manifest_inspect = manifest_nested.add_parser("inspect", help="Inspect one manifest parquet")
@@ -142,7 +150,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     bundle_parser = root.add_parser("bundle", help="Bundle build commands")
     bundle_nested = bundle_parser.add_subparsers(dest="bundle_command", required=True)
-    bundle_build_openml = bundle_nested.add_parser("build-openml", help="Build a pinned OpenML bundle")
+    bundle_build_openml = bundle_nested.add_parser(
+        "build-openml", help="Build a pinned OpenML bundle"
+    )
     bundle_build_openml.add_argument("--out-path", required=True)
     bundle_build_openml.add_argument("--bundle-name", required=True)
     bundle_build_openml.add_argument("--version", type=int, required=True)
@@ -168,7 +178,9 @@ def build_parser() -> argparse.ArgumentParser:
     bundle_build_openml.set_defaults(func=_run_bundle_build_openml)
 
     materialize_parser = root.add_parser("materialize", help="Materialization commands")
-    materialize_nested = materialize_parser.add_subparsers(dest="materialize_command", required=True)
+    materialize_nested = materialize_parser.add_subparsers(
+        dest="materialize_command", required=True
+    )
     materialize_openml = materialize_nested.add_parser(
         "openml-bundle",
         help="Materialize one OpenML bundle into packed shards and a manifest",
