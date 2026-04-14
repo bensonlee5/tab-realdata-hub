@@ -7,21 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.8] - 2026-04-14
+## [0.2.0] - 2026-04-14
 
 ### Changed
 
-- User-facing note: new curated shard outputs now treat
-  `dataset_catalog.parquet` as the canonical catalog sidecar, public catalog
-  read/write helpers preserve compatibility with legacy
-  `dataset_catalog.ndjson` / `metadata.ndjson`, and manifest-backed dataset
-  loads now resolve catalog records from either format through the same stable
-  loader surface.
+- User-facing note: the manifest contract is now v3 and hard-cuts to
+  `dataset_catalog.parquet` with parquet-only row locators
+  (`catalog_path`, `catalog_dataset_index`, `catalog_record_sha256`).
+  Legacy NDJSON catalogs and legacy manifest locator fields are no longer
+  readable.
 - User-facing note: `tab-realdata-hub manifest build` now accepts
   `--manifest-workers`, parallelizes shard-level catalog scans deterministically
   when requested, and `missing_value_policy=allow_any` now builds manifest rows
   from catalog metadata plus split-file existence checks without reopening
-  split parquet files just to enumerate `dataset_index`.
+  split parquet files just to enumerate `dataset_index`. Manifest builds now
+  fail clearly when a shard exposes only legacy `dataset_catalog.ndjson` or
+  `metadata.ndjson` files.
 
 ## [0.1.7] - 2026-04-14
 
