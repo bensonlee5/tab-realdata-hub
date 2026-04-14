@@ -158,9 +158,9 @@ def test_build_manifest_persists_current_dagzoo_handoff_provenance(tmp_path: Pat
         json.dumps(
             {
                 "schema_name": dagzoo_handoff_module.DAGZOO_HANDOFF_SCHEMA_NAME,
-                "schema_version": 4,
+                "schema_version": dagzoo_handoff_module.DAGZOO_HANDOFF_SCHEMA_VERSION,
                 "identity": {
-                    "source_family": "dagzoo",
+                    "source_family": "dagzoo.heterogeneous_scm",
                     "generate_run_id": generate_run_id,
                     "generated_corpus_id": dagzoo_handoff_module.stable_dagzoo_generated_corpus_id(
                         generate_run_id=generate_run_id,
@@ -172,6 +172,7 @@ def test_build_manifest_persists_current_dagzoo_handoff_provenance(tmp_path: Pat
                     "curated_dir": "curated",
                 },
                 "provenance": {
+                    "intervention": {"mode": "none", "signature": "c" * 32},
                     "target_derivation": "tabiclv2_latent_node",
                     "target_relevant_feature_count_range": {"min": 1, "max": 4},
                     "target_relevant_feature_fraction_range": {"min": 0.25, "max": 0.75},
@@ -191,6 +192,7 @@ def test_build_manifest_persists_current_dagzoo_handoff_provenance(tmp_path: Pat
         dagzoo_handoff_manifest_path=handoff_manifest_path,
     )
     expected_provenance = {
+        "intervention": {"mode": "none", "signature": "c" * 32},
         "target_derivation": "tabiclv2_latent_node",
         "target_relevant_feature_count_range": {"min": 1, "max": 4},
         "target_relevant_feature_fraction_range": {"min": 0.25, "max": 0.75},
@@ -206,6 +208,60 @@ def test_build_manifest_persists_current_dagzoo_handoff_provenance(tmp_path: Pat
 
     inspection = manifest_module.inspect_manifest(manifest_path)
     assert inspection["persisted_summary"]["dagzoo_handoff"]["provenance"] == expected_provenance
+
+
+def test_dagzoo_handoff_v4_remains_supported(tmp_path: Path) -> None:
+    generated_root = tmp_path / "generated"
+    generate_run_id = "a" * 32
+    dataset_id = "b" * 32
+    _write_dataset(
+        generated_root / "shard_00001_case",
+        metadata={
+            "dataset_id": dataset_id,
+            "split_groups": {"request_run": generate_run_id},
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "generated", "status": "accepted", "accepted": True},
+        },
+    )
+    handoff_manifest_path = tmp_path / "dagzoo_handoff.json"
+    handoff_manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_name": dagzoo_handoff_module.DAGZOO_HANDOFF_SCHEMA_NAME,
+                "schema_version": 4,
+                "identity": {
+                    "source_family": "dagzoo",
+                    "generate_run_id": generate_run_id,
+                    "generated_corpus_id": dagzoo_handoff_module.stable_dagzoo_generated_corpus_id(
+                        generate_run_id=generate_run_id,
+                        dataset_ids=[dataset_id],
+                    ),
+                },
+                "artifacts_relative": {"generated_dir": "generated"},
+                "provenance": {
+                    "target_derivation": "tabiclv2_latent_node",
+                },
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    summary = manifest_module.build_manifest(
+        [generated_root],
+        tmp_path / "manifest.parquet",
+        dagzoo_handoff_manifest_path=handoff_manifest_path,
+    )
+
+    assert summary.dagzoo_handoff is not None
+    assert summary.dagzoo_handoff["provenance"] == {
+        "target_derivation": "tabiclv2_latent_node"
+    }
 
 
 def test_build_manifest_accepts_curated_root_without_embedded_filter_metadata(tmp_path: Path) -> None:

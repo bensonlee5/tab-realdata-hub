@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-04-14
+
+### Changed
+
+- User-facing note: dagzoo handoff loading now accepts schema version 5
+  manifests and persists v5 intervention provenance summaries alongside the
+  existing target-derivation provenance fields.
+
 ## [0.1.5] - 2026-04-02
 
 ### Changed
