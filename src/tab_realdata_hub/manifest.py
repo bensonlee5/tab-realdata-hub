@@ -36,11 +36,10 @@ from .validation import (
 
 MANIFEST_CONTRACT_METADATA_KEY = b"tab_realdata_hub_manifest_contract"
 MANIFEST_SUMMARY_METADATA_KEY = b"tab_foundry_manifest_summary"
-MANIFEST_CONTRACT_VERSION = 2
-SUPPORTED_MANIFEST_CONTRACT_VERSIONS = (1, 2)
-MANIFEST_LOGICAL_LAYOUT = "parquet_index+dataset_catalog"
+MANIFEST_CONTRACT_VERSION = 3
+SUPPORTED_MANIFEST_CONTRACT_VERSIONS = (3,)
+MANIFEST_LOGICAL_LAYOUT = "parquet_index+dataset_catalog_parquet"
 DATASET_CATALOG_FILENAME = "dataset_catalog.parquet"
-LEGACY_DATASET_CATALOG_FILENAMES = ("dataset_catalog.ndjson", "metadata.ndjson")
 TEACHER_CONDITIONALS_FILENAME = "teacher_conditionals.parquet"
 MANIFEST_STABLE_INDEX_FIELDS = (
     "dataset_id",
@@ -54,9 +53,8 @@ MANIFEST_STABLE_INDEX_FIELDS = (
     "train_path",
     "test_path",
     "catalog_path",
-    "catalog_offset_bytes",
-    "catalog_size_bytes",
-    "catalog_sha256",
+    "catalog_dataset_index",
+    "catalog_record_sha256",
     "teacher_conditionals_path",
     "n_train",
     "n_test",
@@ -430,42 +428,12 @@ def write_dataset_catalog(path: Path, records: Sequence[Mapping[str, Any]]) -> N
     )
 
 
-def _read_ndjson_records(path: Path) -> list[tuple[int, int, str, dict[str, Any]]]:
-    """Read NDJSON records and include byte offsets for random access."""
-
-    records: list[tuple[int, int, str, dict[str, Any]]] = []
-    with path.open("rb") as handle:
-        while True:
-            offset = int(handle.tell())
-            line = handle.readline()
-            if not line:
-                break
-
-            size = int(len(line))
-            stripped = line.strip()
-            if not stripped:
-                continue
-
-            try:
-                payload = json.loads(stripped.decode("utf-8"))
-            except Exception as exc:
-                raise RuntimeError(
-                    f"failed to parse NDJSON record in {path} at byte offset {offset}"
-                ) from exc
-            if not isinstance(payload, dict):
-                raise RuntimeError(
-                    f"NDJSON record must be a JSON object: path={path}, offset={offset}"
-                )
-            records.append((offset, size, sha256(line).hexdigest(), payload))
-    return records
-
-
-def _read_parquet_catalog_records(path: Path) -> list[tuple[int, int, str, dict[str, Any]]]:
+def _read_parquet_catalog_records(path: Path) -> list[tuple[int, str, dict[str, Any]]]:
     rows = pq.read_table(
         path,
         columns=["dataset_index", "record_json", "record_sha256"],
     ).to_pylist()
-    records: list[tuple[int, int, str, dict[str, Any]]] = []
+    records: list[tuple[int, str, dict[str, Any]]] = []
     for row_index, row in enumerate(rows):
         dataset_index = row.get("dataset_index")
         if dataset_index is None:
@@ -503,35 +471,35 @@ def _read_parquet_catalog_records(path: Path) -> list[tuple[int, int, str, dict[
                 f"path={path}, row_index={row_index}, row_dataset_index={dataset_index}, "
                 f"payload_dataset_index={payload['dataset_index']}"
             )
-        records.append(
-            (
-                int(dataset_index),
-                int(len(record_json_bytes)),
-                resolved_sha256,
-                payload,
-            )
-        )
+        records.append((int(dataset_index), resolved_sha256, payload))
     return records
 
 
-def _read_catalog_records(path: Path) -> list[tuple[int, int, str, dict[str, Any]]]:
-    if path.suffix == ".parquet":
-        return _read_parquet_catalog_records(path)
-    return _read_ndjson_records(path)
-
-
 def load_dataset_catalog_records(path: Path) -> list[dict[str, Any]]:
-    """Load public dataset catalog payloads from parquet or legacy NDJSON."""
+    """Load public dataset catalog payloads from the canonical parquet sidecar."""
 
     resolved_path = path.expanduser().resolve()
-    return [payload for _offset, _size, _sha256, payload in _read_catalog_records(resolved_path)]
+    if resolved_path.suffix != ".parquet":
+        raise RuntimeError(
+            "legacy dataset catalog formats are unsupported; expected "
+            f"{DATASET_CATALOG_FILENAME}: {resolved_path}"
+        )
+    return [payload for _dataset_index, _sha256, payload in _read_parquet_catalog_records(resolved_path)]
 
 
 def _catalog_path_for_shard(shard_dir: Path) -> Path | None:
-    for filename in (DATASET_CATALOG_FILENAME, *LEGACY_DATASET_CATALOG_FILENAMES):
-        candidate = shard_dir / filename
-        if candidate.exists():
-            return candidate
+    candidate = shard_dir / DATASET_CATALOG_FILENAME
+    if candidate.exists():
+        return candidate
+    legacy_candidates = [
+        shard_dir / filename for filename in ("dataset_catalog.ndjson", "metadata.ndjson")
+    ]
+    present_legacy = [path.name for path in legacy_candidates if path.exists()]
+    if present_legacy:
+        raise RuntimeError(
+            "legacy dataset catalogs are unsupported; expected "
+            f"{DATASET_CATALOG_FILENAME} in {shard_dir}, found {', '.join(sorted(present_legacy))}"
+        )
     return None
 
 
@@ -605,7 +573,7 @@ def _scan_manifest_shard(
     train_path = shard_dir / "train.parquet"
     test_path = shard_dir / "test.parquet"
     catalog_path = _catalog_path_for_shard(shard_dir)
-    if catalog_path is None or not (train_path.exists() and test_path.exists()):
+    if catalog_path is None and not train_path.exists() and not test_path.exists():
         return _ScannedManifestShard(
             discovered_records=0,
             selected_records=[],
@@ -613,6 +581,16 @@ def _scan_manifest_shard(
             missing_value_status_counts=Counter(),
             excluded_for_missing_values=0,
             dagzoo_records=[],
+        )
+    if catalog_path is None:
+        raise RuntimeError(
+            f"packed shard is missing canonical {DATASET_CATALOG_FILENAME}: {shard_dir}"
+        )
+    if not train_path.exists() or not test_path.exists():
+        missing_splits = [path.name for path in (train_path, test_path) if not path.exists()]
+        raise RuntimeError(
+            "packed shard is missing required split parquet(s): "
+            f"shard={shard_dir}, missing={','.join(missing_splits)}"
         )
 
     teacher_conditionals_path = _teacher_conditionals_path_for_shard(shard_dir)
@@ -632,10 +610,11 @@ def _scan_manifest_shard(
     excluded_for_missing_values = 0
     dagzoo_records: list[tuple[dict[str, Any], Path, int]] = []
 
-    for offset, size, record_sha256, record in _read_catalog_records(catalog_path):
+    for catalog_dataset_index, record_sha256, record in _read_parquet_catalog_records(catalog_path):
         if "dataset_index" not in record:
             raise RuntimeError(
-                f"catalog record missing dataset_index: path={catalog_path}, offset={offset}"
+                "catalog record missing dataset_index: "
+                f"path={catalog_path}, catalog_dataset_index={catalog_dataset_index}"
             )
         dataset_index = int(record["dataset_index"])
         meta = record.get("metadata")
@@ -727,9 +706,8 @@ def _scan_manifest_shard(
                 "train_path": _manifest_relative_path(train_path, manifest_dir=manifest_dir),
                 "test_path": _manifest_relative_path(test_path, manifest_dir=manifest_dir),
                 "catalog_path": _manifest_relative_path(catalog_path, manifest_dir=manifest_dir),
-                "catalog_offset_bytes": offset,
-                "catalog_size_bytes": size,
-                "catalog_sha256": record_sha256,
+                "catalog_dataset_index": catalog_dataset_index,
+                "catalog_record_sha256": record_sha256,
                 "teacher_conditionals_path": teacher_conditionals_manifest_path,
                 "n_train": int(record.get("n_train", -1)),
                 "n_test": int(record.get("n_test", -1)),
@@ -1168,47 +1146,10 @@ def _read_packed_split(
     return row_index, x, y
 
 
-def _read_ndjson_record_by_offset(
-    ndjson_path: Path,
-    *,
-    offset_bytes: int,
-    size_bytes: int,
-    expected_sha256: str,
-) -> dict[str, Any]:
-    with ndjson_path.open("rb") as handle:
-        handle.seek(offset_bytes)
-        raw = handle.read(size_bytes)
-    if len(raw) != size_bytes:
-        raise RuntimeError(
-            "failed to read full NDJSON slice: "
-            f"path={ndjson_path}, offset={offset_bytes}, size={size_bytes}, got={len(raw)}"
-        )
-    actual_sha256 = sha256(raw).hexdigest()
-    if actual_sha256 != expected_sha256:
-        raise RuntimeError(
-            "NDJSON checksum mismatch: "
-            f"path={ndjson_path}, offset={offset_bytes}, size={size_bytes}, "
-            f"expected={expected_sha256}, actual={actual_sha256}"
-        )
-    try:
-        payload = json.loads(raw.decode("utf-8"))
-    except Exception as exc:  # pragma: no cover - defensive parse context
-        raise RuntimeError(
-            "failed to parse NDJSON record: "
-            f"path={ndjson_path}, offset={offset_bytes}, size={size_bytes}"
-        ) from exc
-    if not isinstance(payload, dict):
-        raise RuntimeError(
-            f"NDJSON payload must be an object: path={ndjson_path}, offset={offset_bytes}"
-        )
-    return payload
-
-
 def _read_parquet_catalog_record_by_dataset_index(
     parquet_path: Path,
     *,
     dataset_index: int,
-    size_bytes: int,
     expected_sha256: str,
 ) -> dict[str, Any]:
     rows = pq.read_table(
@@ -1232,12 +1173,6 @@ def _read_parquet_catalog_record_by_dataset_index(
             f"parquet catalog row missing record_json: path={parquet_path}, dataset_index={dataset_index}"
         )
     record_json_bytes = record_json.encode("utf-8")
-    if len(record_json_bytes) != size_bytes:
-        raise RuntimeError(
-            "parquet catalog record size mismatch: "
-            f"path={parquet_path}, dataset_index={dataset_index}, "
-            f"expected={size_bytes}, actual={len(record_json_bytes)}"
-        )
     actual_sha256 = sha256(record_json_bytes).hexdigest()
     if actual_sha256 != expected_sha256:
         raise RuntimeError(
@@ -1258,19 +1193,11 @@ def _read_parquet_catalog_record_by_dataset_index(
     return cast(dict[str, Any], payload)
 
 
-def _manifest_row_catalog_locator(row: Mapping[str, Any]) -> tuple[str, int, int, str]:
-    if "catalog_path" in row:
-        return (
-            str(row["catalog_path"]),
-            int(row["catalog_offset_bytes"]),
-            int(row["catalog_size_bytes"]),
-            str(row["catalog_sha256"]),
-        )
+def _manifest_row_catalog_locator(row: Mapping[str, Any]) -> tuple[str, int, str]:
     return (
-        str(row["metadata_path"]),
-        int(row["metadata_offset_bytes"]),
-        int(row["metadata_size_bytes"]),
-        str(row["metadata_sha256"]),
+        str(row["catalog_path"]),
+        int(row["catalog_dataset_index"]),
+        str(row["catalog_record_sha256"]),
     )
 
 
@@ -1279,19 +1206,11 @@ def load_manifest_record_catalog(
     *,
     record: Mapping[str, Any],
 ) -> dict[str, Any]:
-    raw_path, offset_bytes, size_bytes, expected_sha256 = _manifest_row_catalog_locator(record)
+    raw_path, dataset_index, expected_sha256 = _manifest_row_catalog_locator(record)
     catalog_path = _resolve_record_path(manifest_path, raw_path)
-    if catalog_path.suffix == ".parquet":
-        return _read_parquet_catalog_record_by_dataset_index(
-            catalog_path,
-            dataset_index=offset_bytes,
-            size_bytes=size_bytes,
-            expected_sha256=expected_sha256,
-        )
-    return _read_ndjson_record_by_offset(
+    return _read_parquet_catalog_record_by_dataset_index(
         catalog_path,
-        offset_bytes=offset_bytes,
-        size_bytes=size_bytes,
+        dataset_index=dataset_index,
         expected_sha256=expected_sha256,
     )
 

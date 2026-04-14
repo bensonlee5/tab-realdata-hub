@@ -145,8 +145,14 @@ def test_manifest_build_and_inspect_round_trip(tmp_path: Path) -> None:
     manifest_path = tmp_path / "manifest.parquet"
     summary = manifest_module.build_manifest([root], manifest_path)
     inspection = manifest_module.inspect_manifest(manifest_path)
+    row = pq.read_table(manifest_path).to_pylist()[0]
 
     assert summary.total_records == 1
+    assert "catalog_dataset_index" in row
+    assert "catalog_record_sha256" in row
+    assert "catalog_offset_bytes" not in row
+    assert "catalog_size_bytes" not in row
+    assert "catalog_sha256" not in row
     assert inspection["total_records"] == 1
     assert inspection["manifest_contract"]["version"] == manifest_module.MANIFEST_CONTRACT_VERSION
     assert inspection["manifest_contract"]["stable_index_fields"] == list(
@@ -513,7 +519,7 @@ def test_load_manifest_datasets_reads_generic_manifest_surface(tmp_path: Path) -
     assert loaded.task_records[0]["metadata"]["observed_task"]["dataset_name"] == "generic_case"
 
 
-def test_dataset_catalog_helpers_round_trip_parquet_and_legacy(tmp_path: Path) -> None:
+def test_dataset_catalog_helpers_round_trip_parquet(tmp_path: Path) -> None:
     payload = {
         "dataset_index": 7,
         "dataset_id": "a" * 32,
@@ -529,15 +535,34 @@ def test_dataset_catalog_helpers_round_trip_parquet_and_legacy(tmp_path: Path) -
         },
     }
     parquet_path = tmp_path / "dataset_catalog.parquet"
-    legacy_path = tmp_path / "metadata.ndjson"
     manifest_module.write_dataset_catalog(parquet_path, [payload])
-    legacy_path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
 
     assert manifest_module.load_dataset_catalog_records(parquet_path) == [payload]
-    assert manifest_module.load_dataset_catalog_records(legacy_path) == [payload]
 
 
-def test_build_manifest_supports_mixed_parquet_and_legacy_catalog_roots(tmp_path: Path) -> None:
+def test_dataset_catalog_helpers_reject_legacy_ndjson(tmp_path: Path) -> None:
+    payload = {
+        "dataset_index": 7,
+        "dataset_id": "a" * 32,
+        "group_ids": {"request_run": "b" * 32},
+        "n_train": 4,
+        "n_test": 2,
+        "n_features": 3,
+        "n_classes": 2,
+        "feature_types": ["floating", "floating", "floating"],
+        "metadata": {
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "curated", "status": "accepted", "accepted": True},
+        },
+    }
+    legacy_path = tmp_path / "metadata.ndjson"
+    legacy_path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="legacy dataset catalog formats are unsupported"):
+        _ = manifest_module.load_dataset_catalog_records(legacy_path)
+
+
+def test_build_manifest_rejects_legacy_catalog_roots(tmp_path: Path) -> None:
     parquet_root = tmp_path / "parquet_root"
     legacy_root = tmp_path / "legacy_root"
     _write_dataset(
@@ -562,13 +587,34 @@ def test_build_manifest_supports_mixed_parquet_and_legacy_catalog_roots(tmp_path
         legacy_catalog=True,
     )
 
-    summary = manifest_module.build_manifest(
-        [parquet_root, legacy_root],
-        tmp_path / "manifest.parquet",
-        filter_policy="accepted_only",
-    )
+    with pytest.raises(RuntimeError, match="legacy dataset catalogs are unsupported"):
+        _ = manifest_module.build_manifest(
+            [parquet_root, legacy_root],
+            tmp_path / "manifest.parquet",
+            filter_policy="accepted_only",
+        )
 
-    assert summary.total_records == 2
+
+def test_load_manifest_record_catalog_round_trips_parquet_locator(tmp_path: Path) -> None:
+    root = tmp_path / "packed_shards"
+    _write_dataset(
+        root / "shard_00001_case",
+        metadata={
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "deferred", "status": "not_run"},
+        },
+    )
+    manifest_path = tmp_path / "manifest.parquet"
+    _ = manifest_module.build_manifest([root], manifest_path)
+    row = pq.read_table(manifest_path).to_pylist()[0]
+
+    payload = manifest_module.load_manifest_record_catalog(manifest_path, record=row)
+
+    assert int(payload["dataset_index"]) == int(row["catalog_dataset_index"])
+    assert payload["feature_types"] == ["floating", "floating"]
 
 
 def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkeypatch) -> None:
@@ -677,3 +723,33 @@ def test_load_manifest_datasets_requires_contract_metadata(tmp_path: Path) -> No
         assert "manifest contract metadata is missing" in str(exc)
     else:  # pragma: no cover - defensive failure
         raise AssertionError("expected missing contract metadata to raise")
+
+
+def test_load_manifest_datasets_rejects_legacy_contract_versions(tmp_path: Path) -> None:
+    root = tmp_path / "packed_shards"
+    _write_dataset(
+        root / "shard_00001_case",
+        metadata={
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "deferred", "status": "not_run"},
+        },
+    )
+    manifest_path = tmp_path / "manifest.parquet"
+    _ = manifest_module.build_manifest([root], manifest_path)
+    table = pq.read_table(manifest_path)
+    metadata = dict(table.schema.metadata or {})
+    contract_payload = json.loads(
+        metadata[manifest_module.MANIFEST_CONTRACT_METADATA_KEY].decode("utf-8")
+    )
+    contract_payload["version"] = 2
+    metadata[manifest_module.MANIFEST_CONTRACT_METADATA_KEY] = json.dumps(
+        contract_payload,
+        sort_keys=True,
+    ).encode("utf-8")
+    pq.write_table(table.replace_schema_metadata(metadata), manifest_path)
+
+    with pytest.raises(RuntimeError, match="manifest contract version mismatch"):
+        _ = manifest_module.load_manifest_datasets(manifest_path)
