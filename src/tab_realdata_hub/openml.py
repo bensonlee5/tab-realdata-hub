@@ -24,7 +24,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, LabelEncoder, OrdinalEncoder
 
 from ._json import write_json
-from .manifest import build_manifest
+from .manifest import DATASET_CATALOG_FILENAME, build_manifest, write_dataset_catalog
 
 
 _CLASSIFICATION_TASK_TYPE = "supervised_classification"
@@ -265,7 +265,9 @@ class OpenMLMaterializationResult:
 
 
 class _PreparedTaskProvider(Protocol):
-    def __call__(self, task_id: int, *, new_instances: int, task_type: str) -> PreparedOpenMLTask: ...
+    def __call__(
+        self, task_id: int, *, new_instances: int, task_type: str
+    ) -> PreparedOpenMLTask: ...
 
 
 def task_source_names() -> tuple[str, ...]:
@@ -281,7 +283,9 @@ def task_ids_for_source(task_source: str) -> tuple[int, ...]:
         return OPENML_TASK_SOURCE_REGISTRY[str(task_source)]
     except KeyError as exc:
         choices = ", ".join(repr(name) for name in task_source_names())
-        raise ValueError(f"unknown OpenML task source {task_source!r}; expected one of: {choices}") from exc
+        raise ValueError(
+            f"unknown OpenML task source {task_source!r}; expected one of: {choices}"
+        ) from exc
 
 
 def parse_max_classes_arg(raw_value: str) -> int | None:
@@ -335,12 +339,16 @@ def get_feature_preprocessor(x: np.ndarray | pd.DataFrame) -> ColumnTransformer:
             (
                 "to_pandas",
                 FunctionTransformer(
-                    lambda value: pd.DataFrame(value) if not isinstance(value, pd.DataFrame) else value
+                    lambda value: (
+                        pd.DataFrame(value) if not isinstance(value, pd.DataFrame) else value
+                    )
                 ),
             ),
             (
                 "to_numeric",
-                FunctionTransformer(lambda value: value.apply(pd.to_numeric, errors="coerce").to_numpy()),
+                FunctionTransformer(
+                    lambda value: value.apply(pd.to_numeric, errors="coerce").to_numpy()
+                ),
             ),
         ]
     )
@@ -432,7 +440,9 @@ def prepare_task(
         }
         if task_type == _CLASSIFICATION_TASK_TYPE:
             train_test_split_kwargs["stratify"] = y_raw
-        _x_unused, x_sub, _y_unused, y_sub = train_test_split(x_frame, y_raw, **train_test_split_kwargs)
+        _x_unused, x_sub, _y_unused, y_sub = train_test_split(
+            x_frame, y_raw, **train_test_split_kwargs
+        )
     else:
         x_sub = x_frame
         y_sub = y_raw
@@ -462,7 +472,11 @@ def prepare_task(
             "NumberOfFeatures": float(number_of_features),
             "PercentageOfInstancesWithMissingValues": float(missing_pct),
             **({} if number_of_classes is None else {"NumberOfClasses": float(number_of_classes)}),
-            **({} if minority_class_pct is None else {"MinorityClassPercentage": float(minority_class_pct)}),
+            **(
+                {}
+                if minority_class_pct is None
+                else {"MinorityClassPercentage": float(minority_class_pct)}
+            ),
         },
     )
 
@@ -486,7 +500,9 @@ def _normalize_selection(payload: Any) -> dict[str, Any]:
         }
         optional_keys = {"task_type", "min_classes"}
         actual_keys = set(payload.keys())
-        if not required_keys.issubset(actual_keys) or not actual_keys.issubset(required_keys | optional_keys):
+        if not required_keys.issubset(actual_keys) or not actual_keys.issubset(
+            required_keys | optional_keys
+        ):
             raise RuntimeError(
                 "benchmark bundle selection keys mismatch: "
                 f"missing={sorted(required_keys - actual_keys)}, extra={sorted(actual_keys - (required_keys | optional_keys))}"
@@ -508,7 +524,9 @@ def _normalize_selection(payload: Any) -> dict[str, Any]:
     if not isinstance(max_features, int) or isinstance(max_features, bool) or max_features <= 0:
         raise RuntimeError("benchmark bundle selection.max_features must be a positive int")
     if not isinstance(max_missing_pct, (int, float)) or not 0 <= float(max_missing_pct) <= 100:
-        raise RuntimeError("benchmark bundle selection.max_missing_pct must be a percentage between 0 and 100")
+        raise RuntimeError(
+            "benchmark bundle selection.max_missing_pct must be a percentage between 0 and 100"
+        )
     normalized = {
         "new_instances": int(new_instances),
         "task_type": str(task_type),
@@ -525,7 +543,10 @@ def _normalize_selection(payload: Any) -> dict[str, Any]:
             raise RuntimeError("benchmark bundle selection.max_classes must be a positive int")
         if int(min_classes) > int(max_classes):
             raise RuntimeError("benchmark bundle selection.min_classes must be <= max_classes")
-        if not isinstance(min_minority_class_pct, (int, float)) or not 0 <= float(min_minority_class_pct) <= 100:
+        if (
+            not isinstance(min_minority_class_pct, (int, float))
+            or not 0 <= float(min_minority_class_pct) <= 100
+        ):
             raise RuntimeError(
                 "benchmark bundle selection.min_minority_class_pct must be a percentage between 0 and 100"
             )
@@ -582,7 +603,9 @@ def normalize_bundle(payload: Any) -> dict[str, Any]:
             )
         dataset_name = task_payload["dataset_name"]
         if not isinstance(dataset_name, str) or not dataset_name.strip():
-            raise RuntimeError(f"benchmark bundle task dataset_name must be non-empty at index {index}")
+            raise RuntimeError(
+                f"benchmark bundle task dataset_name must be non-empty at index {index}"
+            )
         normalized_task = {
             "task_id": int(task_payload["task_id"]),
             "dataset_name": str(dataset_name),
@@ -635,7 +658,9 @@ def bundle_summary(bundle: Mapping[str, Any], *, source_path: Path) -> dict[str,
         if isinstance(selection_raw, Mapping)
         else None
     )
-    allow_missing_values = None if not isinstance(selection_raw, Mapping) else bundle_allows_missing_values(bundle)
+    allow_missing_values = (
+        None if not isinstance(selection_raw, Mapping) else bundle_allows_missing_values(bundle)
+    )
     return {
         "name": str(bundle["name"]),
         "version": int(bundle["version"]),
@@ -644,7 +669,9 @@ def bundle_summary(bundle: Mapping[str, Any], *, source_path: Path) -> dict[str,
         "task_ids": task_ids,
         "selection": selection,
         "allow_missing_values": allow_missing_values,
-        "all_tasks_no_missing": None if allow_missing_values is None else (not allow_missing_values),
+        "all_tasks_no_missing": None
+        if allow_missing_values is None
+        else (not allow_missing_values),
     }
 
 
@@ -721,14 +748,22 @@ def candidate_matches_listing_filters(
     candidate: OpenMLTaskCandidate,
     config: OpenMLBundleConfig,
 ) -> tuple[bool, str]:
-    if candidate.number_of_instances is not None and candidate.number_of_instances < float(config.min_instances):
+    if candidate.number_of_instances is not None and candidate.number_of_instances < float(
+        config.min_instances
+    ):
         return False, (
             f"number_of_instances={candidate.number_of_instances:g} below min_instances={config.min_instances}"
         )
     if candidate.number_of_features > float(config.max_features):
-        return False, f"number_of_features={candidate.number_of_features:g} exceeds max_features={config.max_features}"
+        return (
+            False,
+            f"number_of_features={candidate.number_of_features:g} exceeds max_features={config.max_features}",
+        )
     if candidate.missing_pct > float(config.max_missing_pct):
-        return False, f"missing_pct={candidate.missing_pct:g} exceeds max_missing_pct={config.max_missing_pct:g}"
+        return (
+            False,
+            f"missing_pct={candidate.missing_pct:g} exceeds max_missing_pct={config.max_missing_pct:g}",
+        )
     if config.task_type == _CLASSIFICATION_TASK_TYPE:
         if candidate.number_of_classes is None:
             return False, "number_of_classes missing from task listing"
@@ -736,7 +771,9 @@ def candidate_matches_listing_filters(
             return False, (
                 f"number_of_classes={candidate.number_of_classes:g} below min_classes={config.min_classes}"
             )
-        if config.max_classes is not None and candidate.number_of_classes > float(config.max_classes):
+        if config.max_classes is not None and candidate.number_of_classes > float(
+            config.max_classes
+        ):
             return False, (
                 f"number_of_classes={candidate.number_of_classes:g} exceeds max_classes={config.max_classes}"
             )
@@ -755,8 +792,16 @@ def candidate_from_task_listing_row(
     *,
     config: OpenMLBundleConfig,
 ) -> OpenMLTaskCandidate:
-    task_id = int(coerce_finite_float(lookup_task_listing_value(row, "tid", "task_id"), context="task listing tid"))
-    dataset_id = int(coerce_finite_float(lookup_task_listing_value(row, "did", "data_id"), context="task listing did"))
+    task_id = int(
+        coerce_finite_float(
+            lookup_task_listing_value(row, "tid", "task_id"), context="task listing tid"
+        )
+    )
+    dataset_id = int(
+        coerce_finite_float(
+            lookup_task_listing_value(row, "did", "data_id"), context="task listing did"
+        )
+    )
     dataset_name = str(lookup_task_listing_value(row, "name")).strip()
     if not dataset_name:
         raise RuntimeError("task listing dataset name must be non-empty")
@@ -772,7 +817,9 @@ def candidate_from_task_listing_row(
         lookup_task_listing_value(row, "NumberOfInstancesWithMissingValues"),
         context=f"task listing NumberOfInstancesWithMissingValues for task {task_id}",
     )
-    missing_pct = 0.0 if number_of_instances <= 0.0 else (100.0 * missing_instances / number_of_instances)
+    missing_pct = (
+        0.0 if number_of_instances <= 0.0 else (100.0 * missing_instances / number_of_instances)
+    )
     number_of_classes = None
     minority_class_pct = None
     if config.task_type == _CLASSIFICATION_TASK_TYPE:
@@ -785,10 +832,14 @@ def candidate_from_task_listing_row(
             context=f"task listing MinorityClassSize for task {task_id}",
         )
         minority_class_pct = (
-            0.0 if number_of_instances <= 0.0 else (100.0 * minority_class_size / number_of_instances)
+            0.0
+            if number_of_instances <= 0.0
+            else (100.0 * minority_class_size / number_of_instances)
         )
     estimation_procedure_raw = row.get("estimation_procedure")
-    estimation_procedure = None if estimation_procedure_raw is None else str(estimation_procedure_raw).strip()
+    estimation_procedure = (
+        None if estimation_procedure_raw is None else str(estimation_procedure_raw).strip()
+    )
     return OpenMLTaskCandidate(
         task_id=task_id,
         dataset_id=dataset_id,
@@ -851,7 +902,9 @@ def dedupe_discovered_candidates(
             )
     grouped_by_name: dict[str, list[OpenMLTaskCandidate]] = {}
     for candidate in selected:
-        grouped_by_name.setdefault(_normalized_dataset_name_key(candidate.dataset_name), []).append(candidate)
+        grouped_by_name.setdefault(_normalized_dataset_name_key(candidate.dataset_name), []).append(
+            candidate
+        )
     deduped_by_name: list[OpenMLTaskCandidate] = []
     for normalized_name, grouped_candidates in grouped_by_name.items():
         preferred = min(grouped_candidates, key=_candidate_preference_key)
@@ -896,7 +949,9 @@ def _collect_discovered_task_candidates(
                     dataset_id=None,
                     dataset_name=None if row.get("name") is None else str(row.get("name")),
                     estimation_procedure=(
-                        None if row.get("estimation_procedure") is None else str(row.get("estimation_procedure"))
+                        None
+                        if row.get("estimation_procedure") is None
+                        else str(row.get("estimation_procedure"))
                     ),
                     status="rejected",
                     reason=str(exc),
@@ -933,10 +988,14 @@ def validate_prepared_task(
         )
     number_of_features = float(prepared.qualities["NumberOfFeatures"])
     if number_of_features > float(config.max_features):
-        raise RuntimeError(f"number_of_features={number_of_features:g} exceeds max_features={config.max_features}")
+        raise RuntimeError(
+            f"number_of_features={number_of_features:g} exceeds max_features={config.max_features}"
+        )
     missing_pct = float(prepared.qualities["PercentageOfInstancesWithMissingValues"])
     if missing_pct > float(config.max_missing_pct):
-        raise RuntimeError(f"missing_pct={missing_pct:g} exceeds max_missing_pct={config.max_missing_pct:g}")
+        raise RuntimeError(
+            f"missing_pct={missing_pct:g} exceeds max_missing_pct={config.max_missing_pct:g}"
+        )
     if config.task_type == _CLASSIFICATION_TASK_TYPE:
         observed_number_of_classes = int(
             prepared.observed_task.get("n_classes", prepared.qualities["NumberOfClasses"])
@@ -947,7 +1006,9 @@ def validate_prepared_task(
             )
         number_of_classes = float(prepared.qualities["NumberOfClasses"])
         if config.max_classes is not None and number_of_classes > float(config.max_classes):
-            raise RuntimeError(f"number_of_classes={number_of_classes:g} exceeds max_classes={config.max_classes}")
+            raise RuntimeError(
+                f"number_of_classes={number_of_classes:g} exceeds max_classes={config.max_classes}"
+            )
         minority_class_pct = float(prepared.qualities["MinorityClassPercentage"])
         if minority_class_pct < float(config.min_minority_class_pct):
             raise RuntimeError(
@@ -1011,10 +1072,9 @@ def _collect_task_candidates(
                 )
             ),
         )
-        keep_candidate = (
-            candidate.number_of_features <= float(config.max_features)
-            and candidate.missing_pct <= float(config.max_missing_pct)
-        )
+        keep_candidate = candidate.number_of_features <= float(
+            config.max_features
+        ) and candidate.missing_pct <= float(config.max_missing_pct)
         if config.task_type == _CLASSIFICATION_TASK_TYPE:
             keep_candidate = (
                 keep_candidate
@@ -1120,7 +1180,9 @@ def _resolve_selected_tasks(
             f"validated={len(selected_tasks)}, min_task_count={config.min_task_count}"
         )
     dataset_name_counts = Counter(str(prepared.dataset_name) for prepared in selected_tasks)
-    duplicate_dataset_names = sorted(name for name, count in dataset_name_counts.items() if count > 1)
+    duplicate_dataset_names = sorted(
+        name for name, count in dataset_name_counts.items() if count > 1
+    )
     if duplicate_dataset_names:
         raise RuntimeError(
             "OpenML benchmark bundle produced duplicate dataset names after validation: "
@@ -1317,8 +1379,7 @@ def _write_packed_shard(
         "feature_types": ["floating"] * int(x_train.shape[1]),
         "metadata": metadata,
     }
-    with (shard_dir / "metadata.ndjson").open("w", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    write_dataset_catalog(shard_dir / DATASET_CATALOG_FILENAME, [payload])
 
 
 def _split_prepared_task(
@@ -1327,10 +1388,12 @@ def _split_prepared_task(
     split_seed: int,
     test_size: float,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, str]:
-    x_train, x_test, y_train, y_test, _train_idx, _test_idx, split_mode = _split_prepared_task_indices(
-        prepared,
-        split_seed=split_seed,
-        test_size=test_size,
+    x_train, x_test, y_train, y_test, _train_idx, _test_idx, split_mode = (
+        _split_prepared_task_indices(
+            prepared,
+            split_seed=split_seed,
+            test_size=test_size,
+        )
     )
     return x_train, x_test, y_train, y_test, split_mode
 
@@ -1382,7 +1445,9 @@ def materialize_bundle(
     resolved_out_root = out_root.expanduser().resolve()
     if resolved_out_root.exists():
         if not force:
-            raise RuntimeError(f"output root already exists, rerun with force=True: {resolved_out_root}")
+            raise RuntimeError(
+                f"output root already exists, rerun with force=True: {resolved_out_root}"
+            )
         shutil.rmtree(resolved_out_root)
     data_root = resolved_out_root / "packed_shards"
     manifest_path = resolved_out_root / "manifest.parquet"
@@ -1405,10 +1470,12 @@ def materialize_bundle(
             new_instances=int(selection["new_instances"]),
             task_type=str(selection["task_type"]),
         )
-        x_train, x_test, y_train, y_test, train_idx, test_idx, split_mode = _split_prepared_task_indices(
-            prepared,
-            split_seed=split_seed,
-            test_size=test_size,
+        x_train, x_test, y_train, y_test, train_idx, test_idx, split_mode = (
+            _split_prepared_task_indices(
+                prepared,
+                split_seed=split_seed,
+                test_size=test_size,
+            )
         )
         metadata = {
             "config": {

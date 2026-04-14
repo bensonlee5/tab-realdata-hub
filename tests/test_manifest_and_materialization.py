@@ -7,6 +7,7 @@ from typing import Any
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pytest
 
 import tab_realdata_hub.dagzoo_handoff as dagzoo_handoff_module
 import tab_realdata_hub.manifest as manifest_module
@@ -34,7 +35,12 @@ def _build_split_table(rows: list[tuple[int, np.ndarray, np.ndarray]]) -> pa.Tab
     )
 
 
-def _write_dataset(shard_dir: Path, *, metadata: dict[str, Any]) -> None:
+def _write_dataset(
+    shard_dir: Path,
+    *,
+    metadata: dict[str, Any],
+    legacy_catalog: bool = False,
+) -> None:
     shard_dir.mkdir(parents=True, exist_ok=True)
     x_train = np.array([[0.0, 1.0], [1.0, 2.0]], dtype=np.float32)
     y_train = np.array([0, 1], dtype=np.int64)
@@ -50,8 +56,14 @@ def _write_dataset(shard_dir: Path, *, metadata: dict[str, Any]) -> None:
         "feature_types": ["floating", "floating"],
         "metadata": metadata,
     }
-    with (shard_dir / "metadata.ndjson").open("w", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    if legacy_catalog:
+        with (shard_dir / "metadata.ndjson").open("w", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, sort_keys=True) + "\n")
+        return
+    manifest_module.write_dataset_catalog(
+        shard_dir / manifest_module.DATASET_CATALOG_FILENAME,
+        [payload],
+    )
 
 
 def _prepared_task(
@@ -91,8 +103,17 @@ def test_split_prepared_task_falls_back_when_stratification_is_not_possible() ->
         dataset_name="singleton_minority",
         x=np.arange(8, dtype=np.float32).reshape(4, 2),
         y=np.array([0, 0, 0, 1], dtype=np.int64),
-        observed_task={"task_id": 1, "dataset_name": "singleton_minority", "n_rows": 4, "n_features": 2},
-        qualities={"NumberOfFeatures": 2.0, "PercentageOfInstancesWithMissingValues": 0.0, "NumberOfClasses": 2.0},
+        observed_task={
+            "task_id": 1,
+            "dataset_name": "singleton_minority",
+            "n_rows": 4,
+            "n_features": 2,
+        },
+        qualities={
+            "NumberOfFeatures": 2.0,
+            "PercentageOfInstancesWithMissingValues": 0.0,
+            "NumberOfClasses": 2.0,
+        },
     )
 
     x_train, x_test, y_train, y_test, split_mode = openml_module._split_prepared_task(
@@ -259,12 +280,12 @@ def test_dagzoo_handoff_v4_remains_supported(tmp_path: Path) -> None:
     )
 
     assert summary.dagzoo_handoff is not None
-    assert summary.dagzoo_handoff["provenance"] == {
-        "target_derivation": "tabiclv2_latent_node"
-    }
+    assert summary.dagzoo_handoff["provenance"] == {"target_derivation": "tabiclv2_latent_node"}
 
 
-def test_build_manifest_accepts_curated_root_without_embedded_filter_metadata(tmp_path: Path) -> None:
+def test_build_manifest_accepts_curated_root_without_embedded_filter_metadata(
+    tmp_path: Path,
+) -> None:
     curated_root = tmp_path / "curated"
     _write_dataset(
         curated_root / "shard_00001_case",
@@ -309,17 +330,17 @@ def test_build_manifest_allow_any_skips_value_column_scans(
         },
     )
     original_read_table = manifest_module.pq.read_table
-    observed_columns: list[tuple[str, ...] | None] = []
+    observed_paths: list[Path] = []
 
     def read_table_spy(*args: Any, **kwargs: Any) -> pa.Table:
+        raw_path = args[0] if args else kwargs.get("source")
+        if raw_path is not None:
+            observed_paths.append(Path(str(raw_path)).resolve())
         columns = kwargs.get("columns")
         if columns is not None:
             normalized_columns = tuple(str(column) for column in columns)
             assert "x" not in normalized_columns
             assert "y" not in normalized_columns
-            observed_columns.append(normalized_columns)
-        else:
-            observed_columns.append(None)
         return original_read_table(*args, **kwargs)
 
     monkeypatch.setattr(manifest_module.pq, "read_table", read_table_spy)
@@ -335,7 +356,7 @@ def test_build_manifest_allow_any_skips_value_column_scans(
     inspection = manifest_module.inspect_manifest(manifest_path)
     captured = capsys.readouterr()
 
-    assert ("dataset_index",) in observed_columns
+    assert all(path.name not in {"train.parquet", "test.parquet"} for path in observed_paths)
     assert summary.total_records == 1
     assert summary.missing_value_status_counts == {"not_checked": 1}
     assert rows[0]["missing_value_status"] == "not_checked"
@@ -353,7 +374,7 @@ def test_build_manifest_allow_any_skips_value_column_scans(
     assert "manifest build manifest parquet written:" in captured.err
 
 
-def test_build_manifest_allow_any_still_validates_split_dataset_indices(tmp_path: Path) -> None:
+def test_build_manifest_allow_any_ignores_missing_split_dataset_indices(tmp_path: Path) -> None:
     root = tmp_path / "run"
     shard_dir = root / "shard_00000"
     shard_dir.mkdir(parents=True, exist_ok=True)
@@ -375,22 +396,93 @@ def test_build_manifest_allow_any_still_validates_split_dataset_indices(tmp_path
             "filter": {"mode": "deferred", "status": "accepted", "accepted": True},
         },
     }
-    with (shard_dir / "metadata.ndjson").open("w", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, sort_keys=True) + "\n")
+    manifest_module.write_dataset_catalog(
+        shard_dir / manifest_module.DATASET_CATALOG_FILENAME,
+        [payload],
+    )
 
-    try:
+    summary = manifest_module.build_manifest(
+        [root],
+        tmp_path / "manifest.parquet",
+        filter_policy="accepted_only",
+        missing_value_policy="allow_any",
+    )
+
+    assert summary.total_records == 1
+    assert summary.missing_value_status_counts == {"not_checked": 1}
+
+
+def test_build_manifest_forbid_any_still_validates_split_dataset_indices(tmp_path: Path) -> None:
+    root = tmp_path / "run"
+    shard_dir = root / "shard_00000"
+    shard_dir.mkdir(parents=True, exist_ok=True)
+    x_train = np.array([[0.0, 1.0], [1.0, 2.0]], dtype=np.float32)
+    y_train = np.array([0, 1], dtype=np.int64)
+    pq.write_table(_build_split_table([(0, x_train, y_train)]), shard_dir / "train.parquet")
+    pq.write_table(_build_split_table([]), shard_dir / "test.parquet")
+    payload = {
+        "dataset_index": 0,
+        "n_train": 2,
+        "n_test": 0,
+        "n_features": 2,
+        "feature_types": ["floating", "floating"],
+        "metadata": {
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "deferred", "status": "accepted", "accepted": True},
+        },
+    }
+    manifest_module.write_dataset_catalog(
+        shard_dir / manifest_module.DATASET_CATALOG_FILENAME,
+        [payload],
+    )
+
+    with pytest.raises(RuntimeError, match="test.parquet"):
         manifest_module.build_manifest(
             [root],
             tmp_path / "manifest.parquet",
             filter_policy="accepted_only",
-            missing_value_policy="allow_any",
+            missing_value_policy="forbid_any",
         )
-    except RuntimeError as exc:
-        message = str(exc)
-        assert "dataset_index=0" in message
-        assert "test.parquet" in message
-    else:  # pragma: no cover - defensive failure
-        raise AssertionError("expected missing test split dataset_index to raise")
+
+
+def test_build_manifest_manifest_workers_matches_serial_output(tmp_path: Path) -> None:
+    root = tmp_path / "packed_shards"
+    for shard_index in range(3):
+        _write_dataset(
+            root / f"shard_{shard_index:05d}_case",
+            metadata={
+                "dataset_id": f"{shard_index + 1:032x}",
+                "split_groups": {"request_run": "f" * 32},
+                "n_features": 2,
+                "n_classes": 2,
+                "seed": shard_index,
+                "config": {"dataset": {"task": "classification"}},
+                "filter": {"mode": "curated", "status": "accepted", "accepted": True},
+            },
+        )
+
+    serial_manifest_path = tmp_path / "serial.parquet"
+    parallel_manifest_path = tmp_path / "parallel.parquet"
+    _ = manifest_module.build_manifest(
+        [root],
+        serial_manifest_path,
+        filter_policy="accepted_only",
+        manifest_workers=1,
+    )
+    _ = manifest_module.build_manifest(
+        [root],
+        parallel_manifest_path,
+        filter_policy="accepted_only",
+        manifest_workers=4,
+    )
+
+    assert (
+        pq.read_table(serial_manifest_path).to_pylist()
+        == pq.read_table(parallel_manifest_path).to_pylist()
+    )
 
 
 def test_load_manifest_datasets_reads_generic_manifest_surface(tmp_path: Path) -> None:
@@ -421,6 +513,64 @@ def test_load_manifest_datasets_reads_generic_manifest_surface(tmp_path: Path) -
     assert loaded.task_records[0]["metadata"]["observed_task"]["dataset_name"] == "generic_case"
 
 
+def test_dataset_catalog_helpers_round_trip_parquet_and_legacy(tmp_path: Path) -> None:
+    payload = {
+        "dataset_index": 7,
+        "dataset_id": "a" * 32,
+        "group_ids": {"request_run": "b" * 32},
+        "n_train": 4,
+        "n_test": 2,
+        "n_features": 3,
+        "n_classes": 2,
+        "feature_types": ["floating", "floating", "floating"],
+        "metadata": {
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "curated", "status": "accepted", "accepted": True},
+        },
+    }
+    parquet_path = tmp_path / "dataset_catalog.parquet"
+    legacy_path = tmp_path / "metadata.ndjson"
+    manifest_module.write_dataset_catalog(parquet_path, [payload])
+    legacy_path.write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
+
+    assert manifest_module.load_dataset_catalog_records(parquet_path) == [payload]
+    assert manifest_module.load_dataset_catalog_records(legacy_path) == [payload]
+
+
+def test_build_manifest_supports_mixed_parquet_and_legacy_catalog_roots(tmp_path: Path) -> None:
+    parquet_root = tmp_path / "parquet_root"
+    legacy_root = tmp_path / "legacy_root"
+    _write_dataset(
+        parquet_root / "shard_00001_case",
+        metadata={
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 7,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "curated", "status": "accepted", "accepted": True},
+        },
+    )
+    _write_dataset(
+        legacy_root / "shard_00002_case",
+        metadata={
+            "n_features": 2,
+            "n_classes": 2,
+            "seed": 8,
+            "config": {"dataset": {"task": "classification"}},
+            "filter": {"mode": "curated", "status": "accepted", "accepted": True},
+        },
+        legacy_catalog=True,
+    )
+
+    summary = manifest_module.build_manifest(
+        [parquet_root, legacy_root],
+        tmp_path / "manifest.parquet",
+        filter_policy="accepted_only",
+    )
+
+    assert summary.total_records == 2
+
+
 def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkeypatch) -> None:
     bundle_path = tmp_path / "bundle.json"
     bundle_path.write_text(
@@ -438,8 +588,20 @@ def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkey
                 },
                 "task_ids": [101, 102],
                 "tasks": [
-                    {"task_id": 101, "dataset_name": "first_dataset", "n_rows": 10, "n_features": 3, "n_classes": 2},
-                    {"task_id": 102, "dataset_name": "second_dataset", "n_rows": 10, "n_features": 2, "n_classes": 2},
+                    {
+                        "task_id": 101,
+                        "dataset_name": "first_dataset",
+                        "n_rows": 10,
+                        "n_features": 3,
+                        "n_classes": 2,
+                    },
+                    {
+                        "task_id": 102,
+                        "dataset_name": "second_dataset",
+                        "n_rows": 10,
+                        "n_features": 2,
+                        "n_classes": 2,
+                    },
                 ],
             },
             indent=2,
@@ -449,8 +611,12 @@ def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkey
         encoding="utf-8",
     )
     prepared_tasks = {
-        101: _prepared_task(task_id=101, dataset_name="first_dataset", n_rows=10, n_features=3, n_classes=2),
-        102: _prepared_task(task_id=102, dataset_name="second_dataset", n_rows=10, n_features=2, n_classes=2),
+        101: _prepared_task(
+            task_id=101, dataset_name="first_dataset", n_rows=10, n_features=3, n_classes=2
+        ),
+        102: _prepared_task(
+            task_id=102, dataset_name="second_dataset", n_rows=10, n_features=2, n_classes=2
+        ),
     }
     monkeypatch.setattr(
         openml_module,
@@ -467,8 +633,10 @@ def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkey
     manifest_rows = pq.read_table(result.manifest_path).to_pylist()
     assert len(manifest_rows) == 2
 
-    metadata_path = result.data_root / "shard_00001_first_dataset" / "metadata.ndjson"
-    payload = json.loads(metadata_path.read_text(encoding="utf-8").strip())
+    catalog_path = (
+        result.data_root / "shard_00001_first_dataset" / manifest_module.DATASET_CATALOG_FILENAME
+    )
+    payload = manifest_module.load_dataset_catalog_records(catalog_path)[0]
     assert payload["feature_types"] == ["floating", "floating", "floating"]
     assert payload["metadata"]["source_platform"] == "openml"
     assert payload["metadata"]["benchmark_bundle"]["source_path"] == str(bundle_path.resolve())
@@ -481,7 +649,9 @@ def test_materialize_bundle_writes_manifest_backed_shards(tmp_path: Path, monkey
     assert np.array_equal(first_y, expected.y)
     assert len(loaded.manifest_sha256) == 64
     assert loaded.task_records[0]["row_order_mode"] == "global_row_index"
-    assert loaded.task_records[0]["metadata"]["benchmark_bundle"]["source_path"] == str(bundle_path.resolve())
+    assert loaded.task_records[0]["metadata"]["benchmark_bundle"]["source_path"] == str(
+        bundle_path.resolve()
+    )
 
 
 def test_load_manifest_datasets_requires_contract_metadata(tmp_path: Path) -> None:
